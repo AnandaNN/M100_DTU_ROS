@@ -1,0 +1,10 @@
+#ifndef TYPE_DEFINES_H
+#define TYPE_DEFINES_H
+
+enum CONTROL_STATUS_ENUM {
+    STOP_CONTROLLER,
+    RESET_CONTROLLERS,
+    RUNNING
+};
+
+#endif

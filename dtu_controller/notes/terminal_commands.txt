@@ -1,0 +1,5 @@
+rostopic pub /dtu_controller/control_status std_msgs/UInt8 0
+
+rostopic pub /dtu_controller/current_frame_reference geometry_msgs/Twist '{linear:  {x: 1.0, y: 0.0, z: 0.0}, angular: {x: 0.0,y: 0.0,z: 0.0}}'
+
+rosservice call /dji_sdk/set_local_pos_ref
