@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(dtu_controller)
+project(guidance_uart_node)
 
 # Add module path for <name>.cmake conf files
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
@@ -10,10 +10,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
 find_package(catkin REQUIRED COMPONENTS
         roscpp
         geometry_msgs
-        dji_sdk
-        image_transport # for message_filter
         std_msgs
-        guidance_uart
         )
 
 find_package(DJIOSDK REQUIRED)
@@ -29,7 +26,7 @@ find_package(OpenCV QUIET)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS} -lpthread -lrt -W")
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -157,43 +154,18 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(demo_joy_rpyrate_zvel
-        src/demo_joy_rpyrate_zvel.cpp)
+add_executable(guidance_uart_node
+        src/main.cpp
+        src/crc32.cpp
+        src/crc16.cpp
+        src/serial.cpp
+        src/protocal_uart_sdk.cpp)
 
-target_link_libraries(demo_joy_rpyrate_zvel
+target_link_libraries(guidance_uart_node
         ${catkin_LIBRARIES}
-        ${DJIOSDK_LIBRARIES}
         )
-add_dependencies(demo_joy_rpyrate_zvel dji_sdk_generate_messages_cpp)
+#add_dependencies(guidance_uart_node)
 
-add_executable(xy_position_control_node
-        src/xy_position_control_node.cpp
-        src/pid.cpp)
-
-target_link_libraries(xy_position_control_node
-        ${catkin_LIBRARIES}
-        ${DJIOSDK_LIBRARIES}
-        )
-add_dependencies(xy_position_control_node dji_sdk_generate_messages_cpp)
-
-add_executable(position_observer_node
-        src/position_observer_node.cpp)
-
-target_link_libraries(position_observer_node
-        ${catkin_LIBRARIES}
-        ${DJIOSDK_LIBRARIES}
-        )
-add_dependencies(position_observer_node dji_sdk_generate_messages_cpp)
-
-add_executable(basic_control_mission
-        missions/basic_control_mission.cpp
-        src/general_functions.cpp)
-
-target_link_libraries(basic_control_mission
-        ${catkin_LIBRARIES}
-        ${DJIOSDK_LIBRARIES}
-        )
-add_dependencies(basic_control_mission dji_sdk_generate_messages_cpp)
 
 #############
 ## Install ##

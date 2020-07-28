@@ -1,7 +1,7 @@
 <launch>
     <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
         <!-- node parameters -->
-        <param name="serial_name" type="string" value="/dev/ttyAMA1"/>
+        <param name="serial_name" type="string" value="/dev/ttyAMA2"/>
         <param name="baud_rate" type="int" value="230400"/>
         <param name="app_id" type="int" value="1082161"/>
         <param name="app_version" type="int" value="1"/>
@@ -10,9 +10,12 @@
         <param name="use_broadcast" type="bool" value="false"/>
     </node>
 
+    <node pkg="guidance_uart" type="guidanceUARTNode" name="guidance_uart" output="screen" />
+
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
-            <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" />
+            <!-- <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" /> -->
+            <rosparam command="load" file="$(find dtu_controller)/parameters/simple_test.yaml" />
         </node>
 
         <node pkg="dtu_controller" type="position_observer_node" name="position_observer" output="screen">

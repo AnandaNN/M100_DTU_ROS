@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 
   controllerInterface.set_control_status( RUNNING );
 
-  controllerInterface.set_reference( 0, 0, 2, 0 );
+  controllerInterface.set_reference( 0, 0, 1, 0 );
   ros::Duration(10).sleep();
 
   // controllerInterface.set_reference( 1, -2, 2, -1.2 );
