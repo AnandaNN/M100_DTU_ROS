@@ -88,9 +88,17 @@ void ControllerInterface::set_reference( float x, float y, float z, float yaw)
 
 void ControllerInterface::land_copter()
 {
-  
-  currentReference.linear.z = -0.25;
+  float current = currentReference.linear.z;
+  int n = 30;
+  float step = (current + 0.25)/(float) n;
 
-  referencePub.publish(currentReference);
+  for( int i = 0; i < n; i++ )
+  {
+    currentReference.linear.z -= step;
+    referencePub.publish(currentReference);
+    ros::Duration( 3.0/n ).sleep();
+  }
+
+  
 
 }

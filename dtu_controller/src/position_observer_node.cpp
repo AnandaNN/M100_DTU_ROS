@@ -13,7 +13,6 @@
 #include "dji_sdk/dji_sdk.h"
 #include "type_defines.h"
 
-#define USE_GUIDANCE 1
 
 // Publisher
 ros::Publisher currentPosePub;
@@ -54,6 +53,8 @@ float guidanceYawOffset = 0;
 
 bool yawInitialized = false;
 float yawOffset = 0;
+
+int USE_GUIDANCE = 1;
 
 
 int main(int argc, char** argv)
@@ -157,17 +158,17 @@ void guidanceMotionCallback( const guidance_uart::Motion motion )
   tf::Vector3 globalMotion(motion.position_in_global_x - guidanceOffsetPose.linear.x, motion.position_in_global_y - guidanceOffsetPose.linear.y, motion.position_in_global_z - guidanceOffsetPose.linear.z);
 
   tf::Quaternion rpy;
-  rpy.setEuler( 0, 0, rawAttitude.z ); //-guidanceYawOffset );
+  rpy.setEuler( rawAttitude.x, rawAttitude.y, guidanceOffsetPose.angular.z ); //-guidanceYawOffset );
 
   tf::Matrix3x3 R_G2L(rpy);
   R_G2L.getRPY( att.x, att.y, att.z );
 
-  tf::Vector3 poss = R_G2L * globalMotion;
-  ROS_INFO("Ang = %.1f %.1f %.1f", att.x*180/3.14, att.y*180/3.14, att.z*180/3.14);
-  ROS_INFO("RotPos = %.2f %.2f %.2f", poss.getX(), poss.getY(), poss.getZ());
-  ROS_INFO("global = %.2f %.2f %.2f", globalMotion.getX(), globalMotion.getY(), globalMotion.getZ() );
-  ROS_INFO("offset = %.2f %.2f %.2f", guidanceOffsetPose.linear.x, guidanceOffsetPose.linear.y, guidanceOffsetPose.linear.z );
-  ROS_INFO("guidan = %.2f %.2f %.2f\n", motion.position_in_global_x, motion.position_in_global_y, motion.position_in_global_z);
+  tf::Vector3 poss = R_G2L.inverse() * globalMotion;
+  // ROS_INFO("Ang = %.1f %.1f %.1f", att.x*180/3.14, att.y*180/3.14, att.z*180/3.14);
+  // ROS_INFO("RotPos = %.2f %.2f %.2f", poss.getX(), poss.getY(), poss.getZ());
+  // ROS_INFO("global = %.2f %.2f %.2f", globalMotion.getX(), globalMotion.getY(), globalMotion.getZ() );
+  // ROS_INFO("offset = %.2f %.2f %.2f", guidanceOffsetPose.linear.x, guidanceOffsetPose.linear.y, guidanceOffsetPose.linear.z );
+  // ROS_INFO("guidan = %.2f %.2f %.2f\n", motion.position_in_global_x, motion.position_in_global_y, motion.position_in_global_z);
 
   if( !motionInitialized )
   {
@@ -189,8 +190,16 @@ void guidanceMotionCallback( const guidance_uart::Motion motion )
   }
   else
   {
-    guidanceX = poss.getX();
-    guidanceY = poss.getY();
+    // guidanceX = poss.getX();
+    // guidanceY = -poss.getY();
+    guidanceLocalPose.linear.x = poss.getX();
+    guidanceLocalPose.linear.y = -poss.getY();
+    guidanceLocalPose.linear.z = poss.getZ();
+
+    guidanceLocalPose.angular.x = rawAttitude.x;
+    guidanceLocalPose.angular.y = rawAttitude.y;
+    guidanceLocalPose.angular.z = guidanceOffsetPose.angular.z-rawAttitude.z;
+
   }
 }
 
@@ -265,9 +274,15 @@ void observerLoopCallback( const ros::TimerEvent& )
     currentPose.linear.y = guidanceLocalPose.linear.y;
     currentPose.linear.z = actualHeight;
 
-    currentPose.angular.x = guidanceLocalPose.angular.x;
-    currentPose.angular.y = guidanceLocalPose.angular.y;
-    currentPose.angular.z = guidanceLocalPose.angular.z;
+    // currentPose.angular.x = guidanceLocalPose.angular.x;
+    // currentPose.angular.y = guidanceLocalPose.angular.y;
+    // currentPose.angular.z = guidanceLocalPose.angular.z;
+
+    currentPose.angular.x = attitude.x;
+    currentPose.angular.y = attitude.y;
+    currentPose.angular.z = attitude.z;
+
+    currentPosePub.publish(currentPose);
   }
   else
   {
