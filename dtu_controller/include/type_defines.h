@@ -7,4 +7,11 @@ enum CONTROL_STATUS_ENUM {
     RUNNING
 };
 
+enum GLOBAL_POSITIONING {
+    NONE,
+    GPS,
+    GUIDANCE,
+    LAST_VALID
+};
+
 #endif

@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
         dji_sdk
         image_transport # for message_filter
         std_msgs
-        guidance_uart
+	guidance
         )
 
 find_package(DJIOSDK REQUIRED)

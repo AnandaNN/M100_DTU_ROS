@@ -4,3 +4,5 @@
 *.swp
 *sdk.launch
 build.sh
+.vscode
+cmake-modules/build

@@ -40,6 +40,7 @@ float globalRotation = 0;
 tf::Quaternion currentQuaternion;
 
 float actualHeight = 0;
+float ultraHeight = 0;
 uint8_t gpsHealth = 0;
 
 // Global random values
@@ -54,8 +55,8 @@ float guidanceYawOffset = 0;
 bool yawInitialized = false;
 float yawOffset = 0;
 
-int USE_GUIDANCE = 1;
-
+int positioning = GPS;
+bool simulation = 0;
 
 int main(int argc, char** argv)
 {
@@ -63,6 +64,9 @@ int main(int argc, char** argv)
   ros::NodeHandle nh;
 
   ros::Duration(1).sleep();
+
+  if( !nh.param("/dtu_controller/position_observer/simulation", simulation, false) ) ROS_INFO("Simulation not specified");
+  if( !nh.param("/dtu_controller/position_observer/positioning", positioning, (int)GPS) ) ROS_INFO("NO POSITIONING SPECIFIED");
 
   readParameters( nh );
 
@@ -73,12 +77,10 @@ int main(int argc, char** argv)
   localGPSPositionSub = nh.subscribe<geometry_msgs::PointStamped>( "/dji_sdk/local_position", 0, localPositionCallback );
   attitudeQuaternionSub = nh.subscribe<geometry_msgs::QuaternionStamped>( "/dji_sdk/attitude", 0, attitudeCallback );
   gpsHealthSub = nh.subscribe<std_msgs::UInt8>("/dji_sdk/gps_health", 0, gpsHealthCallback);
+  ultraHeightSub = nh.subscribe<std_msgs::Float32>("/dji_sdk/height_above_takeoff", 0, ultraHeightCallback);
 
-  // Doesn't Work
-  //ultraHeightSub = nh.subscribe<std_msgs::Float32>("/dji_sdk/height_above_takeoff", 0, ultraHeightCallback);
-
-  ultrasonicSub = nh.subscribe<sensor_msgs::LaserScan>("/guidance_uart/ultrasonic", 0, ultrasonicCallback);
-  guidanceMotionSub = nh.subscribe<guidance_uart::Motion>("/guidance_uart/motion", 0, guidanceMotionCallback);
+  ultrasonicSub = nh.subscribe<sensor_msgs::LaserScan>("/guidance/ultrasonic", 0, ultrasonicCallback);
+  guidanceMotionSub = nh.subscribe<guidance::Motion>("/guidance/motion", 0, guidanceMotionCallback);
 
   ros::Duration(1).sleep();
 
@@ -127,7 +129,6 @@ void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
   // attitude.z -= M_PI_2;
 }
 
-// Doesn't Work
 void ultraHeightCallback( const std_msgs::Float32 height )
 {
   actualHeight = height.data;
@@ -142,11 +143,11 @@ void ultrasonicCallback( const sensor_msgs::LaserScan scan )
 {
   if( scan.intensities[0] )
   {
-    actualHeight = scan.ranges[0];
+    ultraHeight = scan.ranges[0];
   }
 }
 
-void guidanceMotionCallback( const guidance_uart::Motion motion )
+void guidanceMotionCallback( const guidance::Motion motion )
 {
   
   tf::Quaternion quat = tf::Quaternion( motion.q1, motion.q2, motion.q3, motion.q0);
@@ -190,8 +191,6 @@ void guidanceMotionCallback( const guidance_uart::Motion motion )
   }
   else
   {
-    // guidanceX = poss.getX();
-    // guidanceY = -poss.getY();
     guidanceLocalPose.linear.x = poss.getX();
     guidanceLocalPose.linear.y = -poss.getY();
     guidanceLocalPose.linear.z = poss.getZ();
@@ -200,48 +199,11 @@ void guidanceMotionCallback( const guidance_uart::Motion motion )
     guidanceLocalPose.angular.y = rawAttitude.y;
     guidanceLocalPose.angular.z = guidanceOffsetPose.angular.z-rawAttitude.z;
 
+    if( guidanceLocalPose.angular.z < -M_PI) guidanceLocalPose.angular.z += 2*M_PI;
+    else if( guidanceLocalPose.angular.z > M_PI) guidanceLocalPose.angular.z -= 2*M_PI;
+
   }
 }
-
-
-// void guidanceMotionCallback( const guidance_uart::Motion motion )
-// {
-//   tf::Quaternion quat = tf::Quaternion( motion.q1, motion.q2, motion.q3, motion.q0);
-//   tf::Matrix3x3 R_Q2RPY(quat);
-//   geometry_msgs::Vector3 att;
-  
-//   R_Q2RPY.getRPY(att.x, att.y, att.z);
-//   float rawYaw = att.z;
-
-//   tf::Vector3 globalMotion(motion.position_in_global_x - guidanceXOffset, motion.position_in_global_y - guidanceYOffset, motion.position_in_global_z*0);
-
-//   tf::Quaternion rpy;
-//   rpy.setEuler( 0*att.y, 0*att.x, att.z ); //-guidanceYawOffset );
-
-//   tf::Matrix3x3 R_G2L(rpy);
-//   R_G2L.getRPY( att.x, att.y, att.z );
-
-//   tf::Vector3 poss = R_G2L * globalMotion;
-//   ROS_INFO("Ang = %.1f %.1f %.1f\n", att.x*180/3.14, att.y*180/3.14, att.z*180/3.14);
-//   ROS_INFO("Pos = %.2f %.2f %.2f\n", poss.getX(), poss.getY(), poss.getZ());
-
-//   if( !motionInitialized )
-//   {
-//     guidanceXOffset = motion.position_in_global_x;
-//     guidanceYOffset = motion.position_in_global_y;
-//     guidanceYawOffset = rawYaw;
-//     if( fabs( guidanceXOffset ) < 0.001 || fabs( guidanceYOffset ) < 0.001 ) motionInitialized = false;
-//     else motionInitialized = true;
-//     ROS_INFO("Motion offset initialized to %f\t%f\n", guidanceXOffset, guidanceYOffset);
-//   }
-//   else
-//   {
-//     guidanceX = poss.getX();
-//     guidanceY = poss.getY();
-//     // guidanceX = (motion.position_in_global_x - guidanceXOffset);
-//     // guidanceY = -(motion.position_in_global_y - guidanceYOffset);
-//   }
-// }
 
 void localPositionCallback( const geometry_msgs::PointStamped localPoint )
 {
@@ -268,40 +230,35 @@ void localPositionCallback( const geometry_msgs::PointStamped localPoint )
 
 void observerLoopCallback( const ros::TimerEvent& )
 {
-
-  if( USE_GUIDANCE ){
-    currentPose.linear.x = guidanceLocalPose.linear.x;
-    currentPose.linear.y = guidanceLocalPose.linear.y;
-    currentPose.linear.z = actualHeight;
-
-    // currentPose.angular.x = guidanceLocalPose.angular.x;
-    // currentPose.angular.y = guidanceLocalPose.angular.y;
-    // currentPose.angular.z = guidanceLocalPose.angular.z;
-
-    currentPose.angular.x = attitude.x;
-    currentPose.angular.y = attitude.y;
-    currentPose.angular.z = attitude.z;
-
-    currentPosePub.publish(currentPose);
-  }
-  else
+  if( positioning > NONE && positioning < LAST_VALID )
   {
-    
-    currentPose.linear.x = guidanceX;
-    currentPose.linear.y = guidanceY;
 
-    // if( gpsHealth > 3 ) {
-    //   currentPose.linear.x = localPosition.x;
-    //   currentPose.linear.y = localPosition.y;
-    // }
-    currentPose.linear.z = actualHeight;
+    if( positioning == GUIDANCE ){
+      currentPose.linear.x = guidanceLocalPose.linear.x;
+      currentPose.linear.y = guidanceLocalPose.linear.y;
 
-    currentPose.angular.x = attitude.x;
-    currentPose.angular.y = attitude.y;
-    currentPose.angular.z = attitude.z;
+      currentPose.angular.x = guidanceLocalPose.angular.x;
+      currentPose.angular.y = guidanceLocalPose.angular.y;
+      currentPose.angular.z = guidanceLocalPose.angular.z;
 
-    currentPosePub.publish(currentPose);
-    
+    }
+    else if( positioning == GPS )
+    {
+      
+      if( gpsHealth > 3 ) {
+        currentPose.linear.x = localPosition.x;
+        currentPose.linear.y = localPosition.y;
+      }
+
+      currentPose.angular.x = attitude.x;
+      currentPose.angular.y = attitude.y;
+      currentPose.angular.z = attitude.z;
+      
+    }
+
+    if( simulation ) currentPose.linear.z = actualHeight;
+    else currentPose.linear.z = ultraHeight;
+
+    currentPosePub.publish(currentPose); 
   }
-  
 }

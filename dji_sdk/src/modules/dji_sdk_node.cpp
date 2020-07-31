@@ -20,7 +20,7 @@ DJISDKNode::DJISDKNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private)
     curr_align_state(UNALIGNED)
 {
   nh_private.param("serial_name",   serial_device, std::string("/dev/ttyUSB0"));
-  nh_private.param("baud_rate",     baud_rate, 921600);
+  nh_private.param("baud_rate",     baud_rate, 230400);
   nh_private.param("app_id",        app_id,    123456);
   nh_private.param("app_version",   app_version, 1);
   nh_private.param("enc_key",       enc_key, std::string("abcd1234"));
