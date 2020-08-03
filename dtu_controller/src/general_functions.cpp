@@ -90,7 +90,7 @@ void ControllerInterface::land_copter()
 {
   float current = currentReference.linear.z;
   int n = 30;
-  float step = (current + 0.25)/(float) n;
+  float step = (current + 0.35)/(float) n;
 
   for( int i = 0; i < n; i++ )
   {

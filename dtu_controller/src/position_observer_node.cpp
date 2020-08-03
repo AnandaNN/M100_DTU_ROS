@@ -82,6 +82,9 @@ int main(int argc, char** argv)
   ultrasonicSub = nh.subscribe<sensor_msgs::LaserScan>("/guidance/ultrasonic", 0, ultrasonicCallback);
   guidanceMotionSub = nh.subscribe<guidance::Motion>("/guidance/motion", 0, guidanceMotionCallback);
 
+  if( positioning == GPS ) ROS_INFO("Using GPS for start!");
+  else if( positioning == GUIDANCE ) ROS_INFO("Using GUIDANCE for start!");
+
   ros::Duration(1).sleep();
 
   // Start the control loop timer
