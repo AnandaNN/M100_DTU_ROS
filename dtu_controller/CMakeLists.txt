@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
         image_transport # for message_filter
         std_msgs
 	guidance
+        tf
         )
 
 find_package(DJIOSDK REQUIRED)

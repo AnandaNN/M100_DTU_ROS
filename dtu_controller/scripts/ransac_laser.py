@@ -5,8 +5,14 @@ import numpy as np
 from numpy import multiply, cos, sin, polyfit, array, append, poly1d
 from math import sqrt, atan, tan, degrees, radians
 from std_msgs.msg import Float32MultiArray
+from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PointStamped
 import pandas as pd
 from skimage.measure import ransac, LineModelND
+
+from sensor_msgs.msg import LaserScan
+
+import tf
 
 # Max distance the laser detects 
 laser_dist = 10000
@@ -16,6 +22,9 @@ max_angle = 45
 
 # Set the script into debugging mode
 debug = False
+
+scan_pub = rospy.Publisher('scan', LaserScan, queue_size=1)
+
 
 if debug:
     import matplotlib.pyplot as plt
@@ -34,6 +43,22 @@ def main_laser(laser, ax, canvas, debug=False):
     timestamp, scan = laser.get_filtered_dist(start=90*4,
                                               end=(180)*4,
                                               dmin=10, dmax=laser_dist)
+
+    # publish scan
+    scan_msg = LaserScan()
+    scan_msg.header.frame_id = "laser"
+    scan_msg.header.stamp = rospy.Time.now()
+    scan_msg.time_increment = 1.73611151695e-05
+    scan_msg.scan_time = 0.0250000003725
+    scan_msg.angle_increment = 0.00436332309619
+    scan_msg.angle_min = -1.57079631463/2.0
+    scan_msg.angle_max = 1.57079631463/2.0
+    scan_msg.ranges = scan[:,1]*0.001
+    scan_msg.range_min = 0.2
+    scan_msg.range_max = 10.0
+    scan_msg.intensities = scan[:,1]*0 + 1000
+
+    scan_pub.publish(scan_msg)
 
     # Convert to Cartesian coordinates
     datay = multiply(scan[:, 1], cos(scan[:, 0]))
@@ -126,6 +151,8 @@ def wall_position(debug=False):
     laser = HokuyoLX()
     # Create the publisher
     pub = rospy.Publisher('wall_position', Float32MultiArray, queue_size=10)
+    ang_pub = rospy.Publisher('ang_pub', PoseStamped, queue_size=1)
+    pos_pub = rospy.Publisher('pos_pub', PointStamped, queue_size=1)
     # Create the node
     rospy.init_node('wall', anonymous=True)
     # Set the rate. Not sure what this should be
@@ -139,6 +166,34 @@ def wall_position(debug=False):
         msg.data = [x, y, angle]
         # Publish the data
         pub.publish(msg)
+
+        # Ang msg
+        ang_msg = PoseStamped()
+        ang_msg.header.stamp = rospy.Time.now()
+        ang_msg.header.frame_id = "laser"
+        ang_msg.pose.position.x = 0
+        ang_msg.pose.position.y = 0
+        ang_msg.pose.position.z = 0
+
+        q = tf.transformations.quaternion_from_euler(0, 0, -angle*3.14159/180.0)
+
+        ang_msg.pose.orientation.x = q[0]
+        ang_msg.pose.orientation.y = q[1]
+        ang_msg.pose.orientation.z = q[2]
+        ang_msg.pose.orientation.w = q[3]
+
+        ang_pub.publish(ang_msg)
+
+        # Pos msg
+        pos_msg = PointStamped()
+        pos_msg.header.stamp = rospy.Time.now()
+        pos_msg.header.frame_id = "laser"
+        pos_msg.point.x = y*0.001
+        pos_msg.point.y = x*0.001
+        pos_msg.point.z = 0
+
+        pos_pub.publish(pos_msg)
+
         # If debug is active then update the client
         if debug:
             try:

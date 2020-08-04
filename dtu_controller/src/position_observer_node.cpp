@@ -13,6 +13,7 @@
 #include "dji_sdk/dji_sdk.h"
 #include "type_defines.h"
 
+#include <tf/transform_broadcaster.h>
 
 // Publisher
 ros::Publisher currentPosePub;
@@ -241,7 +242,7 @@ void observerLoopCallback( const ros::TimerEvent& )
       currentPose.linear.y = guidanceLocalPose.linear.y;
 
       currentPose.angular.x = guidanceLocalPose.angular.x;
-      currentPose.angular.y = guidanceLocalPose.angular.y;
+      currentPose.angular.y = -guidanceLocalPose.angular.y;
       currentPose.angular.z = guidanceLocalPose.angular.z;
 
     }
@@ -261,6 +262,14 @@ void observerLoopCallback( const ros::TimerEvent& )
 
     if( simulation ) currentPose.linear.z = actualHeight;
     else currentPose.linear.z = ultraHeight;
+
+    static tf::TransformBroadcaster br;
+    tf::Transform transform;
+    transform.setOrigin( tf::Vector3(currentPose.linear.x, currentPose.linear.y, currentPose.linear.z) );
+    tf::Quaternion q;
+    q.setRPY( currentPose.angular.x, currentPose.angular.y, currentPose.angular.z );
+    transform.setRotation(q);
+    br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "drone"));
 
     currentPosePub.publish(currentPose); 
   }
