@@ -15,7 +15,7 @@ from sensor_msgs.msg import LaserScan
 import tf
 
 # Max distance the laser detects 
-laser_dist = 10000
+laser_dist = 10000 #10000
 
 # The highest angle of the wall which is accepted
 max_angle = 45
@@ -43,14 +43,17 @@ def main_laser(laser, ax, canvas, debug=False):
     timestamp, scan = laser.get_filtered_dist(start=90*4,
                                               end=(180)*4,
                                               dmin=10, dmax=laser_dist)
+    #timestamp, scan = laser.get_filtered_dist(dmin=0, dmax=100000)
 
     # publish scan
     scan_msg = LaserScan()
-    scan_msg.header.frame_id = "laser"
+    scan_msg.header.frame_id = "drone"
     scan_msg.header.stamp = rospy.Time.now()
     scan_msg.time_increment = 1.73611151695e-05
     scan_msg.scan_time = 0.0250000003725
     scan_msg.angle_increment = 0.00436332309619
+    #scan_msg.angle_min = -2.35619449615
+    #scan_msg.angle_max = 2.35619449615
     scan_msg.angle_min = -1.57079631463/2.0
     scan_msg.angle_max = 1.57079631463/2.0
     scan_msg.ranges = scan[:,1]*0.001
@@ -60,6 +63,14 @@ def main_laser(laser, ax, canvas, debug=False):
 
     scan_pub.publish(scan_msg)
 
+    less_than_45 = np.ones(scan.shape[0]) * -0.7
+    
+    
+    # print(scan.shape)
+    scan = scan[np.greater(scan[:,0], less_than_45), :]
+    greater_than_45 = np.ones(scan.shape[0]) * 0.7
+    scan = scan[np.less(scan[:,0], greater_than_45), :]
+    # print(scan.shape)
     # Convert to Cartesian coordinates
     datay = multiply(scan[:, 1], cos(scan[:, 0]))
     datax = multiply(scan[:, 1], sin(scan[:, 0]))
@@ -69,37 +80,65 @@ def main_laser(laser, ax, canvas, debug=False):
 
     while True:
         if data.shape[0] < 20:
+            print("NO FIT!")
             return 0, 0, 0, ax, canvas
         # robustly fit line only using inlier data with RANSAC algorithm
         model_robust, inliers = ransac(data, LineModelND, min_samples=2,
-                                       residual_threshold=10, max_trials=10)
+                                       residual_threshold=50, max_trials=10)
         outliers = inliers == False
 
         # Calculate a line by fitting the inlier data
-        a, b = polyfit(data[inliers, 0],
-                       data[inliers, 1], 1)
+        a = model_robust.params[1][1]
+        b = model_robust.params[0][1]
+
         # Calculate the angle of the line
         v = atan(a)
         angle_wall = degrees(v)
 
         # Check if the angle of the wall is accepted
-        if angle_wall > max_angle:
+        if abs(angle_wall) > max_angle or len(inliers) < 20:
             data = data[outliers]
         else:
             break
 
+    # print(model_robust.params)
+
     # Calculate a line perpendicular to the wall that goes through 0,0
-    angle_90 = 90 + angle_wall
-    a_90 = tan(radians(angle_wall + 90))
-    b_90 = 0
+    # angle_90 = 90 + angle_wall
+    # a_90 = tan(radians(angle_wall + 90))
+    # b_90 = 0
 
     # The walls line:
-    a_wall = a
-    b_wall = b
+    # a_wall = a
+    # b_wall = b
 
     # Calculate the two lines interception
-    x = (b_90 - b_wall)/(a_wall - a_90)
-    y = a_wall * x + b_wall
+    # x = (b_90 - b_wall)/(a_wall - a_90)
+    # y = a_wall * x + b_wall
+
+    x = model_robust.params[0][0]
+    y = model_robust.params[0][1]
+    angle_wall = degrees(atan(model_robust.params[1][1] / model_robust.params[1][0]))
+
+    ax = x
+    ay = y
+
+    bx = model_robust.params[1][0]
+    by = model_robust.params[1][1]
+
+    dx = model_robust.params[1][1]
+    dy = -model_robust.params[1][0]
+
+    L = (ax*dy - ay*dx)/(by*dx - bx*dy)
+
+    x = ax + bx*L
+    y = ay + by*L
+
+    # a_d = model_robust.params[1][1] / model_robust.params[1][0]
+
+    # a_wall = 1.0 / a_d
+
+
 
     if debug:
         try:
@@ -152,6 +191,7 @@ def wall_position(debug=False):
     # Create the publisher
     pub = rospy.Publisher('wall_position', Float32MultiArray, queue_size=10)
     ang_pub = rospy.Publisher('ang_pub', PoseStamped, queue_size=1)
+    wall_pub = rospy.Publisher('wall_pub', PoseStamped, queue_size=1)
     pos_pub = rospy.Publisher('pos_pub', PointStamped, queue_size=1)
     # Create the node
     rospy.init_node('wall', anonymous=True)
@@ -175,7 +215,7 @@ def wall_position(debug=False):
         ang_msg.pose.position.y = 0
         ang_msg.pose.position.z = 0
 
-        q = tf.transformations.quaternion_from_euler(0, 0, -angle*3.14159/180.0)
+        q = tf.transformations.quaternion_from_euler(0, 0, (-angle)*3.14159/180.0)
 
         ang_msg.pose.orientation.x = q[0]
         ang_msg.pose.orientation.y = q[1]
@@ -183,6 +223,23 @@ def wall_position(debug=False):
         ang_msg.pose.orientation.w = q[3]
 
         ang_pub.publish(ang_msg)
+
+        # Wall msg
+        wall_msg = PoseStamped()
+        wall_msg.header.stamp = rospy.Time.now()
+        wall_msg.header.frame_id = "laser"
+        wall_msg.pose.position.x = y*0.001
+        wall_msg.pose.position.y = x*0.001
+        wall_msg.pose.position.z = 0
+
+        q = tf.transformations.quaternion_from_euler(0, 0, (-angle - 90)*3.14159/180.0)
+
+        wall_msg.pose.orientation.x = q[0]
+        wall_msg.pose.orientation.y = q[1]
+        wall_msg.pose.orientation.z = q[2]
+        wall_msg.pose.orientation.w = q[3]
+
+        wall_pub.publish(wall_msg)
 
         # Pos msg
         pos_msg = PointStamped()

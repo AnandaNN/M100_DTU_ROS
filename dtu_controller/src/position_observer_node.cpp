@@ -26,6 +26,7 @@ ros::Subscriber gpsHealthSub;
 
 ros::Subscriber ultrasonicSub;
 ros::Subscriber guidanceMotionSub;
+ros::Subscriber wallPositionSub;
 
 // Global sub/pub variables
 geometry_msgs::Twist currentPose;
@@ -37,6 +38,8 @@ geometry_msgs::Twist guidanceOffsetPose;
 geometry_msgs::Vector3 attitude;
 geometry_msgs::Vector3 localPosition;
 
+geometry_msgs::Twist wallPosition;
+
 float globalRotation = 0;
 tf::Quaternion currentQuaternion;
 
@@ -47,11 +50,6 @@ uint8_t gpsHealth = 0;
 // Global random values
 float loopFrequency;
 bool motionInitialized = false;
-float guidanceX = 0;
-float guidanceXOffset = 0;
-float guidanceY = 0;
-float guidanceYOffset = 0;
-float guidanceYawOffset = 0;
 
 bool yawInitialized = false;
 float yawOffset = 0;
@@ -82,6 +80,8 @@ int main(int argc, char** argv)
 
   ultrasonicSub = nh.subscribe<sensor_msgs::LaserScan>("/guidance/ultrasonic", 0, ultrasonicCallback);
   guidanceMotionSub = nh.subscribe<guidance::Motion>("/guidance/motion", 0, guidanceMotionCallback);
+
+  wallPositionSub = nh.subscribe<std_msgs::Float32MultiArray>("/dtu_controller/wall_position", 0, wallPositionCallback );
 
   if( positioning == GPS ) ROS_INFO("Using GPS for start!");
   else if( positioning == GUIDANCE ) ROS_INFO("Using GUIDANCE for start!");
@@ -131,6 +131,20 @@ void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
   // ROS_INFO("After  Offset = %f\n",attitude.z);
 
   // attitude.z -= M_PI_2;
+}
+
+void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPosition )
+{
+  float y = 0.001 * internalWallPosition.data[0];
+  float x = -0.001 * internalWallPosition.data[1];
+  float ang = tf2Radians(internalWallPosition.data[2]);
+  wallPosition.linear.x = -sqrt( x*x + y*y );
+  wallPosition.linear.y = 0;
+  wallPosition.linear.z = 0;
+
+  wallPosition.angular.x = 0;
+  wallPosition.angular.y = 0;
+  wallPosition.angular.z = ang;
 }
 
 void ultraHeightCallback( const std_msgs::Float32 height )
@@ -258,6 +272,15 @@ void observerLoopCallback( const ros::TimerEvent& )
       currentPose.angular.y = attitude.y;
       currentPose.angular.z = attitude.z;
       
+    }
+    else if ( positioning == WALL_POSITION )
+    {
+      currentPose.linear.x = wallPosition.linear.x;
+      currentPose.linear.y = wallPosition.linear.y;
+
+      currentPose.angular.x = attitude.x;
+      currentPose.angular.y = attitude.y;
+      currentPose.angular.z = wallPosition.angular.z;
     }
 
     if( simulation ) currentPose.linear.z = actualHeight;

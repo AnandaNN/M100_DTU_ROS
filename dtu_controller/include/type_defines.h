@@ -11,6 +11,7 @@ enum GLOBAL_POSITIONING {
     NONE,
     GPS,
     GUIDANCE,
+    WALL_POSITION,
     LAST_VALID
 };
 
