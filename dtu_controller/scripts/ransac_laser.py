@@ -12,6 +12,7 @@ from skimage.measure import ransac, LineModelND
 
 from sensor_msgs.msg import LaserScan
 
+import math
 import tf
 
 # Max distance the laser detects 
@@ -24,7 +25,6 @@ max_angle = 45
 debug = False
 
 scan_pub = rospy.Publisher('scan', LaserScan, queue_size=1)
-
 
 if debug:
     import matplotlib.pyplot as plt
@@ -40,36 +40,19 @@ if debug:
 # the angle of it and the distance to it
 def main_laser(laser, ax, canvas, debug=False):
     # Make a single measurement
-    timestamp, scan = laser.get_filtered_dist(start=90*4,
-                                              end=(180)*4,
-                                              dmin=10, dmax=laser_dist)
-    #timestamp, scan = laser.get_filtered_dist(dmin=0, dmax=100000)
+    # timestamp, scan = laser.get_filtered_dist(start=90*4,
+    #                                           end=(180)*4,
+    #                                           dmin=10, dmax=laser_dist)
+    # timestamp, scan = laser.get_filtered_dist(dmin=0, dmax=100000)
+    timestamp, scan = laser.get_filtered_dist(start=340, end=780, dmin=0, dmax=100000)
 
-    # publish scan
-    scan_msg = LaserScan()
-    scan_msg.header.frame_id = "drone"
-    scan_msg.header.stamp = rospy.Time.now()
-    scan_msg.time_increment = 1.73611151695e-05
-    scan_msg.scan_time = 0.0250000003725
-    scan_msg.angle_increment = 0.00436332309619
-    #scan_msg.angle_min = -2.35619449615
-    #scan_msg.angle_max = 2.35619449615
-    scan_msg.angle_min = -1.57079631463/2.0
-    scan_msg.angle_max = 1.57079631463/2.0
-    scan_msg.ranges = scan[:,1]*0.001
-    scan_msg.range_min = 0.2
-    scan_msg.range_max = 10.0
-    scan_msg.intensities = scan[:,1]*0 + 1000
-
-    scan_pub.publish(scan_msg)
-
-    less_than_45 = np.ones(scan.shape[0]) * -0.7
-    
+    scan_cp = scan.copy()
     
     # print(scan.shape)
-    scan = scan[np.greater(scan[:,0], less_than_45), :]
-    greater_than_45 = np.ones(scan.shape[0]) * 0.7
-    scan = scan[np.less(scan[:,0], greater_than_45), :]
+    # less_than_45 = np.ones(scan.shape[0]) * -0.7
+    # scan = scan[np.greater(scan[:,0], less_than_45), :]
+    # greater_than_45 = np.ones(scan.shape[0]) * 0.7
+    # scan = scan[np.less(scan[:,0], greater_than_45), :]
     # print(scan.shape)
     # Convert to Cartesian coordinates
     datay = multiply(scan[:, 1], cos(scan[:, 0]))
@@ -78,28 +61,160 @@ def main_laser(laser, ax, canvas, debug=False):
     # Convert the data back to one array
     data = np.stack([datax, datay],1)
 
+    # attempts = 0
+
+    # while True:
+    #     if data.shape[0] < 20:
+    #         print("NO FIT!")
+    #         return 0, 0, 0, ax, canvas, 0, 0, 0, 0
+    #     # robustly fit line only using inlier data with RANSAC algorithm
+    #     model_robust, inliers = ransac(data, LineModelND, min_samples=2,
+    #                                    residual_threshold=30, max_trials=10)
+    #     outliers = inliers == False
+
+    #     # print(scan.shape)
+    #     # print(inliers.shape)
+
+    #     # Calculate a line by fitting the inlier data
+    #     a = model_robust.params[1][1]
+    #     b = model_robust.params[0][1]
+
+        
+
+    #     # Calculate the angle of the line
+    #     # v = atan(a)
+    #     # angle_wall = degrees(v)
+    #     angle_wall = degrees(atan(model_robust.params[1][1] / model_robust.params[1][0]))
+
+    #     # Check if the angle of the wall is accepted
+    #     if abs(angle_wall) > max_angle or len(inliers) < 20 or inliers.sum() < 20:
+    #         # data = data[outliers]
+    #         # print("Making random")
+    #         return 0, 0, 0, ax, canvas, 0, 0, 0, 0
+    #         # data[outliers] = np.random.rand(data[outliers].size/2, 2)*2
+    #     else:
+    #         break
+
+    #     attempts += 1
+
+    models = []
+    inliers_lists = []
+    n_inliers = []
+    n = 0
+    attempts = 0
+
+    inliers = np.zeros(scan.shape[0], dtype=int)
+
     while True:
         if data.shape[0] < 20:
-            print("NO FIT!")
-            return 0, 0, 0, ax, canvas
+            break
+            #print("NO FIT!")
+            #return 0, 0, 0, ax, canvas, 0, 0, 0, 0
         # robustly fit line only using inlier data with RANSAC algorithm
-        model_robust, inliers = ransac(data, LineModelND, min_samples=2,
-                                       residual_threshold=50, max_trials=10)
-        outliers = inliers == False
+        model_robust, inliers_sub = ransac(data, LineModelND, min_samples=2,
+                                       residual_threshold=30, max_trials=10)
+        outliers = inliers_sub == False
 
-        # Calculate a line by fitting the inlier data
-        a = model_robust.params[1][1]
-        b = model_robust.params[0][1]
+        angle_wall = degrees(atan(model_robust.params[1][1] / model_robust.params[1][0]))
 
-        # Calculate the angle of the line
-        v = atan(a)
-        angle_wall = degrees(v)
+        if abs(angle_wall) < max_angle and inliers_sub.sum() > 30:
+
+            
+            # if n == 0:
+            #     inliers = inliers_sub
+            # elif n == 1:
+            #     inliers = inliers_lists[0] == False
+            #     # print("n = {} - {} {}".format(n, inliers.sum(), inliers_sub.size))
+            #     inliers[inliers] = inliers_sub
+            # else:
+            #     inliers = np.array(inliers_lists[0] == False) * np.array(inliers_lists[1] == False)
+            #     # print("n = {} - {} {}".format(n, inliers.sum(), inliers_sub.size))
+            #     inliers[inliers] = inliers_sub
+
+            # # print(inliers)
+            # # print(inliers.shape)
+
+            # inliers_lists.append(inliers)
+            n_inliers.append(inliers_sub.sum())
+            models.append(model_robust)
+            inliers_lists.append(attempts)
+            n += 1
+
+            # angle_wall = degrees(atan(model_robust.params[1][1] / model_robust.params[1][0]))
+
+        data = data[outliers]
+
+        if attempts == 0:
+            # print(inliers)
+            # print("inliers == attemspts {} {}".format(attempts, inliers.size))
+            # print(inliers[inliers == attempts])
+            # print(outliers.sum())
+            inliers[outliers] += 1
+        else:
+            # print(inliers)
+            # print("inliers == attemspts {} {}".format(attempts, inliers.size))
+            # print(inliers[inliers == attempts])
+            # print(outliers.sum())
+            inliers[inliers == attempts] += np.array(outliers)
 
         # Check if the angle of the wall is accepted
-        if abs(angle_wall) > max_angle or len(inliers) < 20:
-            data = data[outliers]
-        else:
+        # if abs(angle_wall) > max_angle or len(inliers) < 20 or inliers.sum() < 20:
+            # data = data[outliers]
+            # print("Making random")
+            # data[outliers] = np.random.rand(data[outliers].size/2, 2)*2
+        # else:
+            # break
+
+        if n == 3 or attempts > 10:
             break
+
+        attempts += 1
+
+    if n > 0:
+
+        i = n_inliers.index(max(n_inliers))
+
+        # print(n_inliers)
+        # print(attempts)
+        # print(inliers_lists)
+
+        model_robust = models[i]
+        # inliers = inliers == i
+            
+        # model_robust, inliers = ransac(data, LineModelND, min_samples=2,
+                                        #    residual_threshold=50, max_trials=10)
+        # outliers = inliers == False
+
+        # print("Attempts = {} {}".format(attempts, rospy.Time.now()))
+
+    # scan_inliers = np.zeros(scan.shape)
+    # scan_inliers[:,0] = 500*inliers
+    # scan_inliers[:,1] = scan[:,1]*inliers
+    # print(scan.shape)
+    # print(scan_inliers.shape)
+    # print(inliers.shape)
+
+    # # publish scan
+    scan_msg = LaserScan()
+    scan_msg.header.frame_id = "drone"
+    scan_msg.header.stamp = rospy.Time.now()
+    scan_msg.time_increment = 1.73611151695e-05
+    scan_msg.scan_time = 0.0250000003725
+    scan_msg.angle_increment = 0.00436332309619
+    # scan_msg.angle_min = -2.35619449615
+    # scan_msg.angle_max = 2.35619449615
+    #scan_msg.angle_min = -1.57079631463/2.0
+    #scan_msg.angle_max = 1.57079631463/2.0
+    scan_msg.angle_min = -0.872664619238
+    scan_msg.angle_max = 0.872664619238
+    scan_msg.ranges = scan_cp[:,1]*0.001
+    scan_msg.range_min = 0.2
+    scan_msg.range_max = 10.0
+    scan_msg.intensities = 500*inliers
+
+    scan_pub.publish(scan_msg)
+
+    less_than_45 = np.ones(scan.shape[0]) * -0.7
 
     # print(model_robust.params)
 
@@ -116,29 +231,35 @@ def main_laser(laser, ax, canvas, debug=False):
     # x = (b_90 - b_wall)/(a_wall - a_90)
     # y = a_wall * x + b_wall
 
-    x = model_robust.params[0][0]
-    y = model_robust.params[0][1]
-    angle_wall = degrees(atan(model_robust.params[1][1] / model_robust.params[1][0]))
+    if n > 0:
 
-    ax = x
-    ay = y
+        x = model_robust.params[0][0]
+        y = model_robust.params[0][1]
+        x_est = model_robust.params[0][0]
+        y_est = model_robust.params[0][1]
+        angle_wall = degrees(atan(model_robust.params[1][1] / model_robust.params[1][0]))
+        #yaw_est = degrees(math.atan2(model_robust.params[1][0] , model_robust.params[1][1]))
+        yaw_est = degrees(math.atan(model_robust.params[1][0] / model_robust.params[1][1]))
 
-    bx = model_robust.params[1][0]
-    by = model_robust.params[1][1]
+        # print("{} {} {} {}".format(model_robust.params[1][0], model_robust.params[1][1], yaw_est, angle_wall))
 
-    dx = model_robust.params[1][1]
-    dy = -model_robust.params[1][0]
+        ax = x
+        ay = y
 
-    L = (ax*dy - ay*dx)/(by*dx - bx*dy)
+        bx = model_robust.params[1][0]
+        by = model_robust.params[1][1]
 
-    x = ax + bx*L
-    y = ay + by*L
+        dx = model_robust.params[1][1]
+        dy = -model_robust.params[1][0]
 
-    # a_d = model_robust.params[1][1] / model_robust.params[1][0]
+        L = (ax*dy - ay*dx)/(by*dx - bx*dy)
 
-    # a_wall = 1.0 / a_d
+        x = ax + bx*L
+        y = ay + by*L
 
+        # a_d = model_robust.params[1][1] / model_robust.params[1][0]
 
+        # a_wall = 1.0 / a_d
 
     if debug:
         try:
@@ -161,7 +282,10 @@ def main_laser(laser, ax, canvas, debug=False):
         except tk.TclError:
             return 0, 0, 0, ax, canvas
 
-    return x, y, angle_wall, ax, canvas
+    if n>0:
+        return x, y, angle_wall, ax, canvas, x_est, y_est, yaw_est, n > 0
+    else:
+        return 0, 0, 0, ax, canvas, 0, 0, 0, 0
 
 
 def wall_position(debug=False):
@@ -189,10 +313,12 @@ def wall_position(debug=False):
     # Create the hokuyo laser object
     laser = HokuyoLX()
     # Create the publisher
-    pub = rospy.Publisher('wall_position', Float32MultiArray, queue_size=10)
+    pub = rospy.Publisher('wall_position', Float32MultiArray, queue_size=1)
     ang_pub = rospy.Publisher('ang_pub', PoseStamped, queue_size=1)
     wall_pub = rospy.Publisher('wall_pub', PoseStamped, queue_size=1)
     pos_pub = rospy.Publisher('pos_pub', PointStamped, queue_size=1)
+
+    est_pub = rospy.Publisher('est_pub', PoseStamped, queue_size = 1)
     # Create the node
     rospy.init_node('wall', anonymous=True)
     # Set the rate. Not sure what this should be
@@ -200,17 +326,34 @@ def wall_position(debug=False):
     # Keep the loop alive
     while not rospy.is_shutdown():
         # Obtain a laser measurement
-        x, y, angle, ax, canvas = main_laser(laser, ax, canvas, debug)
+        x, y, angle, ax, canvas, x_est, y_est, yaw_est, valid = main_laser(laser, ax, canvas, debug)
         # Convert it to the ros array
         msg = Float32MultiArray()
-        msg.data = [x, y, angle]
+        msg.data = [x, y, (angle), valid]
         # Publish the data
         pub.publish(msg)
+
+        # Est msg
+        est_msg = PoseStamped()
+        est_msg.header.stamp = rospy.Time.now()
+        est_msg.header.frame_id = "drone"
+        est_msg.pose.position.x = y_est*0.001
+        est_msg.pose.position.y = x_est*0.001
+        est_msg.pose.position.z = 0
+
+        q = tf.transformations.quaternion_from_euler(0, 0, (yaw_est)*3.14159/180.0)
+
+        est_msg.pose.orientation.x = q[0]
+        est_msg.pose.orientation.y = q[1]
+        est_msg.pose.orientation.z = q[2]
+        est_msg.pose.orientation.w = q[3]
+
+        est_pub.publish(est_msg)
 
         # Ang msg
         ang_msg = PoseStamped()
         ang_msg.header.stamp = rospy.Time.now()
-        ang_msg.header.frame_id = "laser"
+        ang_msg.header.frame_id = "drone"
         ang_msg.pose.position.x = 0
         ang_msg.pose.position.y = 0
         ang_msg.pose.position.z = 0
@@ -227,7 +370,7 @@ def wall_position(debug=False):
         # Wall msg
         wall_msg = PoseStamped()
         wall_msg.header.stamp = rospy.Time.now()
-        wall_msg.header.frame_id = "laser"
+        wall_msg.header.frame_id = "drone"
         wall_msg.pose.position.x = y*0.001
         wall_msg.pose.position.y = x*0.001
         wall_msg.pose.position.z = 0
@@ -244,7 +387,7 @@ def wall_position(debug=False):
         # Pos msg
         pos_msg = PointStamped()
         pos_msg.header.stamp = rospy.Time.now()
-        pos_msg.header.frame_id = "laser"
+        pos_msg.header.frame_id = "drone"
         pos_msg.point.x = y*0.001
         pos_msg.point.y = x*0.001
         pos_msg.point.z = 0

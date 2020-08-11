@@ -147,6 +147,10 @@ void controlCallback( const ros::TimerEvent& )
   }
   else if( controlStatus == STOP_CONTROLLER )
   {
+    xPid->reset_control();
+    yPid->reset_control();
+    zVelPid->reset_control();
+    yawRatePid->reset_control();
     controlValue.axes[0] = 0;
     controlValue.axes[1] = 0;
     controlValue.axes[2] = 0;

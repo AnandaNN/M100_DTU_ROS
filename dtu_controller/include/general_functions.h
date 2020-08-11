@@ -20,7 +20,7 @@ bool set_local_frame(ros::NodeHandle nh);
 
 class ControllerInterface {
 private:
-    ros::NodeHandle nh;
+    // ros::NodeHandle nh;
     
     ros::Publisher cmdStatusPub;
     ros::Publisher referencePub;
@@ -34,6 +34,8 @@ public:
     void set_control_status( uint8_t cmd );
     void set_reference( float x, float y, float z, float yaw);
     void land_copter();
+
+    void holdPosition( ros::NodeHandle nh );
 
 };
 

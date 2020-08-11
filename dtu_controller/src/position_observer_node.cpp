@@ -73,18 +73,22 @@ int main(int argc, char** argv)
   currentPosePub = nh.advertise<geometry_msgs::Twist>("/dtu_controller/current_frame_pose", 0);
 
   // Initialize subsrcibers
+  // Subscribers from DJI node
   localGPSPositionSub = nh.subscribe<geometry_msgs::PointStamped>( "/dji_sdk/local_position", 0, localPositionCallback );
   attitudeQuaternionSub = nh.subscribe<geometry_msgs::QuaternionStamped>( "/dji_sdk/attitude", 0, attitudeCallback );
   gpsHealthSub = nh.subscribe<std_msgs::UInt8>("/dji_sdk/gps_health", 0, gpsHealthCallback);
   ultraHeightSub = nh.subscribe<std_msgs::Float32>("/dji_sdk/height_above_takeoff", 0, ultraHeightCallback);
 
+  // Guidance subscribers
   ultrasonicSub = nh.subscribe<sensor_msgs::LaserScan>("/guidance/ultrasonic", 0, ultrasonicCallback);
   guidanceMotionSub = nh.subscribe<guidance::Motion>("/guidance/motion", 0, guidanceMotionCallback);
 
+  // Laser scanner subscriber
   wallPositionSub = nh.subscribe<std_msgs::Float32MultiArray>("/dtu_controller/wall_position", 0, wallPositionCallback );
 
   if( positioning == GPS ) ROS_INFO("Using GPS for start!");
   else if( positioning == GUIDANCE ) ROS_INFO("Using GUIDANCE for start!");
+  else if( positioning == WALL_POSITION ) ROS_INFO("Using Wall positioning for start!");
 
   ros::Duration(1).sleep();
 
@@ -135,16 +139,27 @@ void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
 
 void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPosition )
 {
-  float y = 0.001 * internalWallPosition.data[0];
-  float x = -0.001 * internalWallPosition.data[1];
-  float ang = tf2Radians(internalWallPosition.data[2]);
-  wallPosition.linear.x = -sqrt( x*x + y*y );
-  wallPosition.linear.y = 0;
-  wallPosition.linear.z = 0;
+  if( internalWallPosition.data[3] > 0.1 )
+  {
 
-  wallPosition.angular.x = 0;
-  wallPosition.angular.y = 0;
-  wallPosition.angular.z = ang;
+    float y = 0.001 * internalWallPosition.data[0];
+    float x = -0.001 * internalWallPosition.data[1];
+    float ang = tf2Radians(internalWallPosition.data[2]);
+    wallPosition.linear.x = -sqrt( x*x + y*y ) * cos(attitude.y);
+    wallPosition.linear.y = 0;
+    wallPosition.linear.z = 0;
+
+    wallPosition.angular.x = 0;
+    wallPosition.angular.y = 0;
+    wallPosition.angular.z = wallPosition.angular.z*0.5 + ang*0.5;
+
+    float rot = wallPosition.angular.z - guidanceLocalPose.angular.z;
+
+    // ROS_INFO("wall = %f | global = %f | rot = %f", wallPosition.angular.z*180/3.14159, guidanceLocalPose.angular.z*180/3.14159, rot * 180/3.14159 );
+
+    wallPosition.linear.y = guidanceLocalPose.linear.x * sin( rot ) 
+                              + guidanceLocalPose.linear.y * cos( rot );
+  }
 }
 
 void ultraHeightCallback( const std_msgs::Float32 height )

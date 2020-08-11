@@ -65,6 +65,28 @@ void ControllerInterface::init_interface( ros::NodeHandle nh )
   referencePub = nh.advertise<geometry_msgs::Twist> ("/dtu_controller/current_frame_reference",1);
 }
 
+void ControllerInterface::holdPosition( ros::NodeHandle nh )
+{
+  boost::shared_ptr<geometry_msgs::Twist const> sharedPose;
+  geometry_msgs::Twist currentPose;
+  sharedPose = ros::topic::waitForMessage<geometry_msgs::Twist>("/dtu_controller/current_frame_pose", nh);
+  if(sharedPose != NULL){
+    currentPose = *sharedPose;
+  }
+  ROS_INFO("Setting reference to:\nX = %.2f\nY = %.2f\nZ = %.2f\nYaw = %.2f\n", currentPose.linear.x, currentPose.linear.y, currentPose.linear.z, currentPose.angular.z);
+
+  currentReference.angular.x = 0;
+  currentReference.angular.y = 0;
+  currentReference.angular.z = currentPose.angular.z;
+
+  currentReference.linear.x = currentPose.linear.x;
+  currentReference.linear.y = currentPose.linear.y;
+  currentReference.linear.z = currentPose.linear.z;
+
+  referencePub.publish(currentReference);
+
+}
+
 void ControllerInterface::set_control_status( uint8_t cmd ) 
 {
   std_msgs::UInt8 msg;
