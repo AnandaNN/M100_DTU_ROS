@@ -18,6 +18,7 @@
 #include <tf/tf.h>
 #include <sensor_msgs/Joy.h>
 #include <sensor_msgs/LaserScan.h>
+#include <sensor_msgs/Imu.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Float32MultiArray.h>
@@ -39,6 +40,7 @@ void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion );
 void localPositionCallback( const geometry_msgs::PointStamped localPoint );
 void ultraHeightCallback( const std_msgs::Float32 height );
 void gpsHealthCallback( const std_msgs::UInt8 health );
+void imuCallback( const sensor_msgs::Imu raw_imu );
 
 void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPosition );
 

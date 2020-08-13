@@ -27,6 +27,7 @@ ros::Subscriber gpsHealthSub;
 ros::Subscriber ultrasonicSub;
 ros::Subscriber guidanceMotionSub;
 ros::Subscriber wallPositionSub;
+ros::Subscriber imuSub;
 
 // Global sub/pub variables
 geometry_msgs::Twist currentPose;
@@ -38,6 +39,8 @@ geometry_msgs::Twist guidanceOffsetPose;
 geometry_msgs::Vector3 attitude;
 geometry_msgs::Vector3 localPosition;
 
+tf::Vector3 motionVelocity;
+
 geometry_msgs::Twist wallPosition;
 
 float globalRotation = 0;
@@ -46,6 +49,8 @@ tf::Quaternion currentQuaternion;
 float actualHeight = 0;
 float ultraHeight = 0;
 uint8_t gpsHealth = 0;
+
+float gyroZ = 0;
 
 // Global random values
 float loopFrequency;
@@ -56,6 +61,10 @@ float yawOffset = 0;
 
 int positioning = GPS;
 bool simulation = 0;
+
+bool gpsReady = false;
+bool laserReady = false;
+bool motionReady = false;
 
 int main(int argc, char** argv)
 {
@@ -78,6 +87,7 @@ int main(int argc, char** argv)
   attitudeQuaternionSub = nh.subscribe<geometry_msgs::QuaternionStamped>( "/dji_sdk/attitude", 0, attitudeCallback );
   gpsHealthSub = nh.subscribe<std_msgs::UInt8>("/dji_sdk/gps_health", 0, gpsHealthCallback);
   ultraHeightSub = nh.subscribe<std_msgs::Float32>("/dji_sdk/height_above_takeoff", 0, ultraHeightCallback);
+  imuSub = nh.subscribe<sensor_msgs::Imu>("/dji_sdk/imu", 0, imuCallback);
 
   // Guidance subscribers
   ultrasonicSub = nh.subscribe<sensor_msgs::LaserScan>("/guidance/ultrasonic", 0, ultrasonicCallback);
@@ -85,12 +95,45 @@ int main(int argc, char** argv)
 
   // Laser scanner subscriber
   wallPositionSub = nh.subscribe<std_msgs::Float32MultiArray>("/dtu_controller/wall_position", 0, wallPositionCallback );
+  
+  ros::Duration(2).sleep();
 
-  if( positioning == GPS ) ROS_INFO("Using GPS for start!");
-  else if( positioning == GUIDANCE ) ROS_INFO("Using GUIDANCE for start!");
-  else if( positioning == WALL_POSITION ) ROS_INFO("Using Wall positioning for start!");
+  // Spin through the callback queue
+  for( int i = 0; i < 10; i++ ) ros::spinOnce();
 
-  ros::Duration(1).sleep();
+  // if( positioning == GPS ) ROS_INFO("Using GPS positioning for start!");
+  // else if( positioning == GUIDANCE ) ROS_INFO("Using GUIDANCE for start!");
+  // else if( positioning == WALL_POSITION ) ROS_INFO("Using Wall positioning for start!");
+
+  if( positioning == GUIDANCE )
+  {
+    ROS_INFO("Using GUIDANCE for start!");
+    currentPose.linear.x = guidanceLocalPose.linear.x;
+    currentPose.linear.y = guidanceLocalPose.linear.y;
+    currentPose.linear.z = ultraHeight;
+    currentPose.angular.z = attitude.z;
+
+  }
+  else if( positioning == GPS )
+  {
+    ROS_INFO("Using GPS positioning for start!");
+    if( gpsHealth > 3 ) {
+      currentPose.linear.x = localPosition.x;
+      currentPose.linear.y = localPosition.y;
+    }
+    currentPose.linear.z = ultraHeight;
+    currentPose.angular.z = attitude.z;
+    
+  }
+  else if ( positioning == WALL_POSITION )
+  {
+    ROS_INFO("Using Wall positioning for start!");
+    ROS_INFO("%f",wallPosition.linear.x);
+    currentPose.linear.x = wallPosition.linear.x;
+    currentPose.linear.y = wallPosition.linear.y;
+    currentPose.linear.z = ultraHeight;
+    currentPose.angular.z = wallPosition.angular.z;
+  }
 
   // Start the control loop timer
   
@@ -107,6 +150,11 @@ void readParameters( ros::NodeHandle nh )
   nh.getParam("/dtu_controller/position_observer/loop_hz", loopFrequency);
   ROS_INFO("Observer frequency: %f", loopFrequency);
 
+}
+
+void imuCallback( const sensor_msgs::Imu raw_imu )
+{
+  gyroZ = raw_imu.angular_velocity.z;
 }
 
 void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
@@ -141,6 +189,7 @@ void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPositio
 {
   if( internalWallPosition.data[3] > 0.1 )
   {
+    // ROS_INFO("WALL CALLBACK");
 
     float y = 0.001 * internalWallPosition.data[0];
     float x = -0.001 * internalWallPosition.data[1];
@@ -159,6 +208,7 @@ void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPositio
 
     wallPosition.linear.y = guidanceLocalPose.linear.x * sin( rot ) 
                               + guidanceLocalPose.linear.y * cos( rot );
+                              
   }
 }
 
@@ -203,6 +253,12 @@ void guidanceMotionCallback( const guidance::Motion motion )
   // ROS_INFO("global = %.2f %.2f %.2f", globalMotion.getX(), globalMotion.getY(), globalMotion.getZ() );
   // ROS_INFO("offset = %.2f %.2f %.2f", guidanceOffsetPose.linear.x, guidanceOffsetPose.linear.y, guidanceOffsetPose.linear.z );
   // ROS_INFO("guidan = %.2f %.2f %.2f\n", motion.position_in_global_x, motion.position_in_global_y, motion.position_in_global_z);
+
+  motionVelocity.setX(motion.velocity_in_global_x);
+  motionVelocity.setY(motion.velocity_in_global_y);
+  motionVelocity.setZ(-motion.velocity_in_global_z);
+  // tf::Matrix3x3 R_VEL(quat);
+  motionVelocity = R_G2L.inverse() * motionVelocity;
 
   if( !motionInitialized )
   {
@@ -263,43 +319,67 @@ void localPositionCallback( const geometry_msgs::PointStamped localPoint )
 
 void observerLoopCallback( const ros::TimerEvent& )
 {
+  geometry_msgs::Twist truePose;
+
   if( positioning > NONE && positioning < LAST_VALID )
   {
 
     if( positioning == GUIDANCE ){
-      currentPose.linear.x = guidanceLocalPose.linear.x;
-      currentPose.linear.y = guidanceLocalPose.linear.y;
+      truePose.linear.x = guidanceLocalPose.linear.x;
+      truePose.linear.y = guidanceLocalPose.linear.y;
 
-      currentPose.angular.x = guidanceLocalPose.angular.x;
-      currentPose.angular.y = -guidanceLocalPose.angular.y;
-      currentPose.angular.z = guidanceLocalPose.angular.z;
+      truePose.angular.x = guidanceLocalPose.angular.x;
+      truePose.angular.y = -guidanceLocalPose.angular.y;
+      truePose.angular.z = guidanceLocalPose.angular.z;
 
     }
     else if( positioning == GPS )
     {
       
       if( gpsHealth > 3 ) {
-        currentPose.linear.x = localPosition.x;
-        currentPose.linear.y = localPosition.y;
+        truePose.linear.x = localPosition.x;
+        truePose.linear.y = localPosition.y;
       }
 
-      currentPose.angular.x = attitude.x;
-      currentPose.angular.y = attitude.y;
-      currentPose.angular.z = attitude.z;
+      truePose.angular.x = attitude.x;
+      truePose.angular.y = attitude.y;
+      truePose.angular.z = attitude.z;
       
     }
     else if ( positioning == WALL_POSITION )
     {
-      currentPose.linear.x = wallPosition.linear.x;
-      currentPose.linear.y = wallPosition.linear.y;
+      truePose.linear.x = wallPosition.linear.x;
+      truePose.linear.y = wallPosition.linear.y;
 
-      currentPose.angular.x = attitude.x;
-      currentPose.angular.y = attitude.y;
-      currentPose.angular.z = wallPosition.angular.z;
+      truePose.angular.x = attitude.x;
+      truePose.angular.y = attitude.y;
+      truePose.angular.z = wallPosition.angular.z;
     }
 
     if( simulation ) currentPose.linear.z = actualHeight;
-    else currentPose.linear.z = ultraHeight;
+    else
+    {
+      truePose.linear.z = ultraHeight;
+    }
+
+    float maxError = 0.5;
+    float weight[3] = {0.5, 0.5, 0.5};
+    float weightYaw = 0.3;
+
+    if( fabs(truePose.linear.x - currentPose.linear.x) > maxError ) weight[0] = 1;
+    if( fabs(truePose.linear.y - currentPose.linear.y) > maxError ) weight[1] = 1;
+    if( fabs(truePose.linear.z - currentPose.linear.z) > maxError ) weight[2] = 1;
+
+    if( fabs(truePose.angular.z - currentPose.angular.z) > maxError ) weightYaw = 1;
+
+    currentPose.linear.x = (currentPose.linear.x + motionVelocity.getX()*(1.0/loopFrequency) )*weight[0] + truePose.linear.x * (1 - weight[0]);
+    currentPose.linear.y = (currentPose.linear.y + motionVelocity.getY()*(1.0/loopFrequency) )*weight[1] + truePose.linear.y * (1 - weight[1]);
+    currentPose.linear.z = (currentPose.linear.z + motionVelocity.getZ()*(1.0/loopFrequency) )*weight[2] + truePose.linear.z * (1 - weight[2]);
+
+    currentPose.angular.x = truePose.angular.x;
+    currentPose.angular.y = truePose.angular.y;
+    // currentPose.angular.z = truePose.angular.z;
+    currentPose.angular.z = (currentPose.angular.z + gyroZ*(1.0/loopFrequency) )*weightYaw + truePose.angular.z * (1 - weightYaw);
 
     static tf::TransformBroadcaster br;
     tf::Transform transform;
