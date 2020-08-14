@@ -25,12 +25,12 @@
 
 #include <guidance/Motion.h>
 
-#include "guidanceOdometry.h"
+#include "GuidanceOdometry.h"
 // #include <geometry_msgs/QuaternionStamped.h>
 // #include <geometry_msgs/Vector3Stamped.h>
 // #include <sensor_msgs/NavSatFix.h>
 
-guidanceOdometry odo;
+GuidanceOdometry odo;
 
 // DJI SDK includes
 // #include <dji_sdk/DroneTaskControl.h>

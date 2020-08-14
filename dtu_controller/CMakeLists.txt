@@ -159,7 +159,7 @@ include_directories(
 # )
 
 add_library( dtu_modules STATIC 
-        src/guidanceOdometry.cpp
+        src/GuidanceOdometry.cpp
         )
 
 add_executable(demo_joy_rpyrate_zvel

@@ -78,7 +78,7 @@ int main(int argc, char** argv)
 
   readParameters( nh );
 
-  odo.test();
+  odo.startOdometry( nh );
 
   // Publisher for control values
   currentPosePub = nh.advertise<geometry_msgs::Twist>("/dtu_controller/current_frame_pose", 0);
