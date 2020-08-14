@@ -24,10 +24,13 @@
 #include <std_msgs/Float32MultiArray.h>
 
 #include <guidance/Motion.h>
+
+#include "guidanceOdometry.h"
 // #include <geometry_msgs/QuaternionStamped.h>
 // #include <geometry_msgs/Vector3Stamped.h>
 // #include <sensor_msgs/NavSatFix.h>
 
+guidanceOdometry odo;
 
 // DJI SDK includes
 // #include <dji_sdk/DroneTaskControl.h>

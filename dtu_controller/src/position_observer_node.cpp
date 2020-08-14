@@ -78,6 +78,8 @@ int main(int argc, char** argv)
 
   readParameters( nh );
 
+  odo.test();
+
   // Publisher for control values
   currentPosePub = nh.advertise<geometry_msgs::Twist>("/dtu_controller/current_frame_pose", 0);
 
@@ -260,6 +262,8 @@ void guidanceMotionCallback( const guidance::Motion motion )
   // tf::Matrix3x3 R_VEL(quat);
   motionVelocity = R_G2L.inverse() * motionVelocity;
 
+  // ROS_INFO("vx: %.2f  vy: %.2f  vz: %.2f", motionVelocity.getX(), motionVelocity.getY(), motionVelocity.getZ());
+
   if( !motionInitialized )
   {
     if( fabs( motion.position_in_global_x ) < 0.001 || fabs( motion.position_in_global_y ) < 0.001 )
@@ -340,6 +344,11 @@ void observerLoopCallback( const ros::TimerEvent& )
         truePose.linear.x = localPosition.x;
         truePose.linear.y = localPosition.y;
       }
+      else
+      {
+        truePose.linear.x = 9999;
+        truePose.linear.y = 9999;
+      }
 
       truePose.angular.x = attitude.x;
       truePose.angular.y = attitude.y;
@@ -363,14 +372,27 @@ void observerLoopCallback( const ros::TimerEvent& )
     }
 
     float maxError = 0.5;
-    float weight[3] = {0.5, 0.5, 0.5};
-    float weightYaw = 0.3;
+    bool valid = true;
+    float weightYaw;
+    float weight[3];
 
-    if( fabs(truePose.linear.x - currentPose.linear.x) > maxError ) weight[0] = 1;
-    if( fabs(truePose.linear.y - currentPose.linear.y) > maxError ) weight[1] = 1;
-    if( fabs(truePose.linear.z - currentPose.linear.z) > maxError ) weight[2] = 1;
+    if( fabs(truePose.linear.x - currentPose.linear.x) > maxError ) valid = false;
+    else if( fabs(truePose.linear.y - currentPose.linear.y) > maxError ) valid = false;
+    else if( fabs(truePose.linear.z - currentPose.linear.z) > maxError ) valid = false;
+    else if( fabs(truePose.angular.z - currentPose.angular.z) > maxError ) valid = false;
 
-    if( fabs(truePose.angular.z - currentPose.angular.z) > maxError ) weightYaw = 1;
+    if( valid ) {
+      weight[0] = 0.5;
+      weight[1] = 0.5;
+      weight[2] = 0.5;
+      weightYaw = 0.3;
+    }
+    else {
+      weight[0] = 1;
+      weight[1] = 1;
+      weight[2] = 1;
+      weightYaw = 1;
+    }
 
     currentPose.linear.x = (currentPose.linear.x + motionVelocity.getX()*(1.0/loopFrequency) )*weight[0] + truePose.linear.x * (1 - weight[0]);
     currentPose.linear.y = (currentPose.linear.y + motionVelocity.getY()*(1.0/loopFrequency) )*weight[1] + truePose.linear.y * (1 - weight[1]);

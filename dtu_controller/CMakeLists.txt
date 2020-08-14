@@ -158,6 +158,10 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
+add_library( dtu_modules STATIC 
+        src/guidanceOdometry.cpp
+        )
+
 add_executable(demo_joy_rpyrate_zvel
         src/demo_joy_rpyrate_zvel.cpp)
 
@@ -181,6 +185,7 @@ add_executable(position_observer_node
         src/position_observer_node.cpp)
 
 target_link_libraries(position_observer_node
+        dtu_modules
         ${catkin_LIBRARIES}
         ${DJIOSDK_LIBRARIES}
         )
