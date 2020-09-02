@@ -87,6 +87,16 @@ void ControllerInterface::holdPosition( ros::NodeHandle nh )
 
 }
 
+void ControllerInterface::getCurrentPosition( ros::NodeHandle nh, geometry_msgs::Twist * currentPose )
+{
+  boost::shared_ptr<geometry_msgs::Twist const> sharedPose;
+  sharedPose = ros::topic::waitForMessage<geometry_msgs::Twist>("/dtu_controller/current_frame_pose", nh);
+  if(sharedPose != NULL){
+    *currentPose = *sharedPose;
+  }
+
+}
+
 void ControllerInterface::set_control_status( uint8_t cmd ) 
 {
   std_msgs::UInt8 msg;

@@ -194,6 +194,7 @@ add_dependencies(position_observer_node dji_sdk_generate_messages_cpp)
 ########################################################################
 # Missions #
 
+# Basic Control mission
 add_executable(basic_control_mission
         missions/basic_control_mission.cpp
         src/general_functions.cpp)
@@ -204,6 +205,7 @@ target_link_libraries(basic_control_mission
         )
 add_dependencies(basic_control_mission dji_sdk_generate_messages_cpp)
 
+# Switch on controller test
 add_executable(switch_on_controller_test
         missions/switch_on_controller_test.cpp
         src/general_functions.cpp)
@@ -213,6 +215,17 @@ target_link_libraries(switch_on_controller_test
         ${DJIOSDK_LIBRARIES}
         )
 add_dependencies(switch_on_controller_test dji_sdk_generate_messages_cpp)
+
+# Visual tracking test
+add_executable(visual_tracking_test
+        missions/visual_tracking_test.cpp
+        src/general_functions.cpp)
+
+target_link_libraries(visual_tracking_test
+        ${catkin_LIBRARIES}
+        ${DJIOSDK_LIBRARIES}
+        )
+#add_dependencies(switch_on_controller_test)
 
 #############
 ## Install ##

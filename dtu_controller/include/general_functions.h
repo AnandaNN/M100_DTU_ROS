@@ -35,6 +35,8 @@ public:
     void set_reference( float x, float y, float z, float yaw);
     void land_copter();
 
+    void getCurrentPosition( ros::NodeHandle nh, geometry_msgs::Twist * curretPose );
+
     void holdPosition( ros::NodeHandle nh );
 
 };
