@@ -37,31 +37,32 @@ int main(int argc, char** argv)
   if( set_control_authority(nh, true) ) ROS_INFO("Got control authorithy");
   else return 0;
 
-  ros::Duration(2).sleep();
+  // ros::Duration(2).sleep();
 
-  arm_motors(nh, true);
+  // arm_motors(nh, true);
 
   controllerInterface.set_control_status( RUNNING );
 
-  controllerInterface.set_reference( 0, 0, 0.7, 0 );
-  ros::Duration(10).sleep();
+  // controllerInterface.set_reference( 0, 0, 2, 0 );
+  // ros::Duration(6).sleep();
 
-  controllerInterface.set_reference( 0, -0.5, 0.7, 0.5 );
-  ros::Duration(12).sleep();
+  // controllerInterface.set_reference( 5, 5, 2, 0.4 );
+  // ros::Duration(12).sleep();
 
+  // controllerInterface.set_reference( -3, -6, 3, -0.5 );
+  // ros::Duration(20).sleep();
 
-  controllerInterface.set_reference( 0.5, -0.5, 0.7, 0.5 );
-  ros::Duration(12).sleep();
+  // controllerInterface.set_reference( 0.0, 0.0, 2, 0 );
+  // ros::Duration(16).sleep();
 
-  controllerInterface.set_reference( 0.0, 0.0, 0.7, 0 );
-  ros::Duration(12).sleep();
+  // controllerInterface.land_copter();
+  // ros::Duration(5).sleep();
 
-  controllerInterface.land_copter();
-  ros::Duration(5).sleep();
-
-  arm_motors(nh, false);
+  // arm_motors(nh, false);
   
-  ros::Duration(2).sleep();
+  // ros::Duration(2).sleep();
+
+  while( ros::ok() ) ros::Duration(0.5).sleep();
 
   if( set_control_authority(nh, false) ) ROS_INFO("Released control authorithy");
   else return 0;

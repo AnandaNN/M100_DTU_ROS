@@ -38,4 +38,6 @@ void checkControlStatusCallback( const std_msgs::UInt8 value );
 void updateReferenceCallback( const geometry_msgs::Twist reference );
 void updatePoseCallback( const geometry_msgs::Twist pose );
 
+void rampReferenceUpdate();
+
 #endif // DEMO_FLIGHT_CONTROL_H

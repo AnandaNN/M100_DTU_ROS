@@ -45,6 +45,7 @@ void GuidanceOdometry::startOdometry( ros::NodeHandle nh )
 
 }
 
+// 
 void GuidanceOdometry::ultraSonicCallback( const sensor_msgs::LaserScan scan )
 {
   _ultraScan = scan;
@@ -57,6 +58,14 @@ void GuidanceOdometry::ultraSonicCallback( const sensor_msgs::LaserScan scan )
   _ultraMsgNum++;
 }
 
+/***********************************************
+ * 
+ * Callback function for reading the velocity
+ * and position from the motion (visual odometry)
+ * topic provided by the Guidance sensor
+ * Around 60Hz
+ * 
+ * ********************************************/
 void GuidanceOdometry::motionCallback( const guidance::Motion motion )
 {
   _motion = motion;

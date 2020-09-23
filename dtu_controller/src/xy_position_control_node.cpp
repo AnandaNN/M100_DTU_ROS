@@ -3,7 +3,7 @@
  *  @date June, 2020
  *
  *  @brief
- *  demo sample of joy stick with rpyrate zvel control
+ *  
  *
  *  @copyright 2020 Ananda Nielsen, DTU. All rights reserved.
  *
@@ -24,10 +24,14 @@ ros::Publisher controlValuePub;
 sensor_msgs::Joy controlValue;
 geometry_msgs::Twist currentPose;
 geometry_msgs::Twist currentReference;
+geometry_msgs::Twist goalReference;
+
+geometry_msgs::Twist referenceSteps;
 
 // Global random values
 uint8_t controlStatus = STOP_CONTROLLER;
 float loopFrequency;
+bool referenceUpdated = false;
 
 // PID Controllers
 PID *xPid;
@@ -75,6 +79,21 @@ int main(int argc, char** argv)
   currentPose.angular.x = 0;
   currentPose.angular.y = 0;
   currentPose.angular.z = 0;
+
+  goalReference.linear.x = 0;
+  goalReference.linear.y = 0;
+  goalReference.linear.z = 0;
+  goalReference.angular.x = 0;
+  goalReference.angular.y = 0;
+  goalReference.angular.z = 0;
+
+  referenceSteps.linear.x = 0;
+  referenceSteps.linear.y = 0;
+  referenceSteps.linear.z = 0;
+  referenceSteps.angular.x = 0;
+  referenceSteps.angular.y = 0;
+  referenceSteps.angular.z = 0;
+
 
   // ros::Duration(2).sleep();
 
@@ -134,6 +153,8 @@ void controlCallback( const ros::TimerEvent& )
   if( controlStatus == RUNNING)
   {
 
+    rampReferenceUpdate();
+
     float xCmd = xPid->calculate(currentReference.linear.x, currentPose.linear.x);
     float yCmd = yPid->calculate(currentReference.linear.y, currentPose.linear.y);
     controlValue.axes[2] = zVelPid->calculate(currentReference.linear.z, currentPose.linear.z);
@@ -168,7 +189,51 @@ void updatePoseCallback( const geometry_msgs::Twist pose )
 void updateReferenceCallback( const geometry_msgs::Twist reference )
 {
   ROS_INFO("Reference udpated");
-  currentReference = reference;
+  goalReference = reference;
+  referenceUpdated = true;
+}
+
+void rampReferenceUpdate()
+{
+  float maxV = 2.0; // m/s
+  float maxRot = 60 * M_PI / 180.0;
+
+  // Update step sizes
+  if( referenceUpdated )
+  {
+    float totalDist = sqrt( pow(goalReference.linear.x-currentReference.linear.x, 2) + pow(goalReference.linear.y-currentReference.linear.y, 2) + pow(goalReference.linear.z-currentReference.linear.z, 2) );
+    float estTime = totalDist / maxV;
+    referenceSteps.linear.x = (goalReference.linear.x - currentReference.linear.x) / (estTime * loopFrequency);
+    referenceSteps.linear.y = (goalReference.linear.y - currentReference.linear.y) / (estTime * loopFrequency);
+    referenceSteps.linear.z = (goalReference.linear.z - currentReference.linear.z) / (estTime * loopFrequency);
+
+    referenceSteps.angular.z = (goalReference.angular.z - currentReference.angular.z) / (estTime * loopFrequency);
+
+    referenceUpdated = false;
+
+    ROS_INFO("### Reference Updated ###");
+    ROS_INFO("Est travel time: %.2f", estTime);
+    ROS_INFO("Steps: %.4f  %.4f  %.4f", referenceSteps.linear.x, referenceSteps.linear.y, referenceSteps.linear.z);
+  }
+  
+  float tolerance = 2;
+  // Update X
+  if( fabs(goalReference.linear.x - currentReference.linear.x) > fabs(tolerance * referenceSteps.linear.x) ) currentReference.linear.x += referenceSteps.linear.x;
+  else currentReference.linear.x = goalReference.linear.x;
+  // Update Y
+  if( fabs(goalReference.linear.y - currentReference.linear.y) > fabs(tolerance * referenceSteps.linear.y) ) currentReference.linear.y += referenceSteps.linear.y;
+  else currentReference.linear.y = goalReference.linear.y;
+  // Update Z
+  if( fabs(goalReference.linear.z - currentReference.linear.z) > fabs(tolerance * referenceSteps.linear.z) ) currentReference.linear.z += referenceSteps.linear.z;
+  else currentReference.linear.z = goalReference.linear.z;
+
+  // Update Z
+  if( fabs(goalReference.angular.z - currentReference.angular.z) > fabs(tolerance * referenceSteps.angular.z) ) currentReference.angular.z += referenceSteps.angular.z;
+  else currentReference.angular.z = goalReference.angular.z;
+
+
+  // ROS_INFO("%.2f  %.2f  %.2f", currentReference.linear.x, currentReference.linear.y, currentReference.linear.z);
+
 }
 
 void checkControlStatusCallback( const std_msgs::UInt8 value )

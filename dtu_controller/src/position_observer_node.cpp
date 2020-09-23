@@ -394,14 +394,23 @@ void observerLoopCallback( const ros::TimerEvent& )
       weightYaw = 1;
     }
 
-    currentPose.linear.x = (currentPose.linear.x + motionVelocity.getX()*(1.0/loopFrequency) )*weight[0] + truePose.linear.x * (1 - weight[0]);
-    currentPose.linear.y = (currentPose.linear.y + motionVelocity.getY()*(1.0/loopFrequency) )*weight[1] + truePose.linear.y * (1 - weight[1]);
-    currentPose.linear.z = (currentPose.linear.z + motionVelocity.getZ()*(1.0/loopFrequency) )*weight[2] + truePose.linear.z * (1 - weight[2]);
+    if( !simulation ) {
+      currentPose.linear.x = (currentPose.linear.x + motionVelocity.getX()*(1.0/loopFrequency) )*weight[0] + truePose.linear.x * (1 - weight[0]);
+      currentPose.linear.y = (currentPose.linear.y + motionVelocity.getY()*(1.0/loopFrequency) )*weight[1] + truePose.linear.y * (1 - weight[1]);
+      currentPose.linear.z = (currentPose.linear.z + motionVelocity.getZ()*(1.0/loopFrequency) )*weight[2] + truePose.linear.z * (1 - weight[2]);
+
+      currentPose.angular.z = (currentPose.angular.z + gyroZ*(1.0/loopFrequency) )*weightYaw + truePose.angular.z * (1 - weightYaw);
+    }
+    else{
+      currentPose.linear.x = truePose.linear.x;
+      currentPose.linear.y = truePose.linear.y;
+      currentPose.angular.z = truePose.angular.z;
+    }
 
     currentPose.angular.x = truePose.angular.x;
     currentPose.angular.y = truePose.angular.y;
     // currentPose.angular.z = truePose.angular.z;
-    currentPose.angular.z = (currentPose.angular.z + gyroZ*(1.0/loopFrequency) )*weightYaw + truePose.angular.z * (1 - weightYaw);
+    
 
     static tf::TransformBroadcaster br;
     tf::Transform transform;
