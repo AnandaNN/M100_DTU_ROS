@@ -19,6 +19,7 @@ ros::ServiceClient sdk_ctrl_authority_service;
 
 // Control publisher
 ros::Publisher controlValuePub;
+ros::Publisher currentFramePub;
 
 // Global sub/pub variables
 sensor_msgs::Joy controlValue;
@@ -54,11 +55,12 @@ int main(int argc, char** argv)
 
   // Publisher for control values
   controlValuePub = nh.advertise<sensor_msgs::Joy>("/dji_sdk/flight_control_setpoint_xy_yawrate_zvelocity", 1);
+  currentFramePub = nh.advertise<geometry_msgs::Twist>("current_frame_reference", 1);
 
   // Subscriber
   ros::Subscriber controlStatusSub = nh.subscribe("control_status", 0, &checkControlStatusCallback );
   ros::Subscriber poseSub = nh.subscribe("current_frame_pose", 0, &updatePoseCallback );
-  ros::Subscriber referenceSub = nh.subscribe("current_frame_reference", 0, &updateReferenceCallback );
+  ros::Subscriber referenceSub = nh.subscribe("current_frame_goal_reference", 0, &updateReferenceCallback );
 
   // Initialize the 4 control values
   controlValue.axes.push_back(0);
@@ -195,44 +197,55 @@ void updateReferenceCallback( const geometry_msgs::Twist reference )
 
 void rampReferenceUpdate()
 {
-  float maxV = 2.0; // m/s
+  float maxV = 1.5; // m/s
   float maxRot = 60 * M_PI / 180.0;
 
-  // Update step sizes
-  if( referenceUpdated )
-  {
-    float totalDist = sqrt( pow(goalReference.linear.x-currentReference.linear.x, 2) + pow(goalReference.linear.y-currentReference.linear.y, 2) + pow(goalReference.linear.z-currentReference.linear.z, 2) );
-    float estTime = totalDist / maxV;
-    referenceSteps.linear.x = (goalReference.linear.x - currentReference.linear.x) / (estTime * loopFrequency);
-    referenceSteps.linear.y = (goalReference.linear.y - currentReference.linear.y) / (estTime * loopFrequency);
-    referenceSteps.linear.z = (goalReference.linear.z - currentReference.linear.z) / (estTime * loopFrequency);
+  if( referenceUpdated && goalReference.angular.x ) {
+    currentReference.linear.x = goalReference.linear.x;
+    currentReference.linear.y = goalReference.linear.y;
+    currentReference.linear.z = goalReference.linear.z;
 
-    referenceSteps.angular.z = (goalReference.angular.z - currentReference.angular.z) / (estTime * loopFrequency);
-
+    currentReference.angular.z = goalReference.angular.z;
     referenceUpdated = false;
-
-    ROS_INFO("### Reference Updated ###");
-    ROS_INFO("Est travel time: %.2f", estTime);
-    ROS_INFO("Steps: %.4f  %.4f  %.4f", referenceSteps.linear.x, referenceSteps.linear.y, referenceSteps.linear.z);
   }
-  
-  float tolerance = 2;
-  // Update X
-  if( fabs(goalReference.linear.x - currentReference.linear.x) > fabs(tolerance * referenceSteps.linear.x) ) currentReference.linear.x += referenceSteps.linear.x;
-  else currentReference.linear.x = goalReference.linear.x;
-  // Update Y
-  if( fabs(goalReference.linear.y - currentReference.linear.y) > fabs(tolerance * referenceSteps.linear.y) ) currentReference.linear.y += referenceSteps.linear.y;
-  else currentReference.linear.y = goalReference.linear.y;
-  // Update Z
-  if( fabs(goalReference.linear.z - currentReference.linear.z) > fabs(tolerance * referenceSteps.linear.z) ) currentReference.linear.z += referenceSteps.linear.z;
-  else currentReference.linear.z = goalReference.linear.z;
+  else {
+    // Update step sizes
+    if( referenceUpdated )
+    {
+      float totalDist = sqrt( pow(goalReference.linear.x-currentReference.linear.x, 2) + pow(goalReference.linear.y-currentReference.linear.y, 2) + pow(goalReference.linear.z-currentReference.linear.z, 2) );
+      float estTime = totalDist / maxV;
+      referenceSteps.linear.x = (goalReference.linear.x - currentReference.linear.x) / (estTime * loopFrequency);
+      referenceSteps.linear.y = (goalReference.linear.y - currentReference.linear.y) / (estTime * loopFrequency);
+      referenceSteps.linear.z = (goalReference.linear.z - currentReference.linear.z) / (estTime * loopFrequency);
 
-  // Update Z
-  if( fabs(goalReference.angular.z - currentReference.angular.z) > fabs(tolerance * referenceSteps.angular.z) ) currentReference.angular.z += referenceSteps.angular.z;
-  else currentReference.angular.z = goalReference.angular.z;
+      referenceSteps.angular.z = (goalReference.angular.z - currentReference.angular.z) / (estTime * loopFrequency);
 
+      referenceUpdated = false;
 
+      ROS_INFO("### Reference Updated ###");
+      ROS_INFO("Est travel time: %.2f", estTime);
+      ROS_INFO("Steps: %.4f  %.4f  %.4f", referenceSteps.linear.x, referenceSteps.linear.y, referenceSteps.linear.z);
+    }
+    
+    float tolerance = 2;
+    // Update X
+    if( fabs(goalReference.linear.x - currentReference.linear.x) > fabs(tolerance * referenceSteps.linear.x) ) currentReference.linear.x += referenceSteps.linear.x;
+    else currentReference.linear.x = goalReference.linear.x;
+    // Update Y
+    if( fabs(goalReference.linear.y - currentReference.linear.y) > fabs(tolerance * referenceSteps.linear.y) ) currentReference.linear.y += referenceSteps.linear.y;
+    else currentReference.linear.y = goalReference.linear.y;
+    // Update Z
+    if( fabs(goalReference.linear.z - currentReference.linear.z) > fabs(tolerance * referenceSteps.linear.z) ) currentReference.linear.z += referenceSteps.linear.z;
+    else currentReference.linear.z = goalReference.linear.z;
+
+    // Update Z
+    if( fabs(goalReference.angular.z - currentReference.angular.z) > fabs(tolerance * referenceSteps.angular.z) ) currentReference.angular.z += referenceSteps.angular.z;
+    else currentReference.angular.z = goalReference.angular.z;
+
+  }
   // ROS_INFO("%.2f  %.2f  %.2f", currentReference.linear.x, currentReference.linear.y, currentReference.linear.z);
+
+  currentFramePub.publish(currentReference);
 
 }
 

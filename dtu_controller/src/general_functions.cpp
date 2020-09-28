@@ -62,7 +62,7 @@ bool set_local_frame(ros::NodeHandle nh)
 void ControllerInterface::init_interface( ros::NodeHandle nh )
 {
   cmdStatusPub = nh.advertise<std_msgs::UInt8> ("/dtu_controller/control_status",1);
-  referencePub = nh.advertise<geometry_msgs::Twist> ("/dtu_controller/current_frame_reference",1);
+  referencePub = nh.advertise<geometry_msgs::Twist> ("/dtu_controller/current_frame_goal_reference",1);
 }
 
 void ControllerInterface::holdPosition( ros::NodeHandle nh )
@@ -75,7 +75,7 @@ void ControllerInterface::holdPosition( ros::NodeHandle nh )
   }
   ROS_INFO("Setting reference to:\nX = %.2f\nY = %.2f\nZ = %.2f\nYaw = %.2f\n", currentPose.linear.x, currentPose.linear.y, currentPose.linear.z, currentPose.angular.z);
 
-  currentReference.angular.x = 0;
+  currentReference.angular.x = 1; // Force instant change and not ramp
   currentReference.angular.y = 0;
   currentReference.angular.z = currentPose.angular.z;
 

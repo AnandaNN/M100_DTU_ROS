@@ -49,26 +49,26 @@ int main(int argc, char** argv)
   ROS_INFO("Ready to give up control");
   std::cin >> input;
 
-  controllerInterface.set_reference( -4.0, 0, 1, 0.0 );
+  controllerInterface.set_reference( -4.0, 0, 1.0, 0.0 );
   std::cin >> input;
 
-  controllerInterface.set_reference( -3.0, 0, 1, 0.0 );
+  // controllerInterface.set_reference( -3.0, 0, 1, 0.0 );
+  // std::cin >> input;
+
+
+  // controllerInterface.set_reference( -2.0, 0, 1, 0.0 );
+  // std::cin >> input;
+
+
+  // controllerInterface.set_reference( -1.5, 0.0, 1, 0.0 );
+  // std::cin >> input;
+
+
+  controllerInterface.set_reference( -2.0, 0.0, 1.0, 0.0 );
   std::cin >> input;
 
 
-  controllerInterface.set_reference( -2.0, 0, 1, 0.0 );
-  std::cin >> input;
-
-
-  controllerInterface.set_reference( -1.5, 0.0, 1, 0.0 );
-  std::cin >> input;
-
-
-  controllerInterface.set_reference( -1.0, 0.0, 1, 0.0 );
-  std::cin >> input;
-
-
-  controllerInterface.set_reference( -3, 0, 1, 0.0 );
+  controllerInterface.set_reference( -4, 0, 1.0, 0.0 );
   std::cin >> input;
 
 
