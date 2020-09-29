@@ -46,10 +46,10 @@ int main(int argc, char** argv)
   controllerInterface.set_reference( 0, 0, 2, 0 );
   ros::Duration(6).sleep();
 
-  controllerInterface.set_reference( 2, -2, 2, 0.0 );
+  controllerInterface.set_reference( 2, -2, 2, 0.6 );
   ros::Duration(12).sleep();
 
-  controllerInterface.set_reference( 0.0, 0.0, 2, 0 );
+  controllerInterface.set_reference( 0.0, 0.0, 2, -0.20 );
   ros::Duration(16).sleep();
 
   controllerInterface.land_copter();

@@ -131,12 +131,18 @@ include_directories(
 ## Declare a C++ executable
 add_executable(hku_m100_pcsim_gazebo_bridge src/hku_m100_pcsim_gazebo_bridge.cpp)
 
+add_executable(m100_sim_bridge src/m100_sim_bridge.cpp)
+
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(hku_m100_gazebo_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(hku_m100_pcsim_gazebo_bridge
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(m100_sim_bridge
   ${catkin_LIBRARIES}
 )
 

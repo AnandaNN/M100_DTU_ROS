@@ -11,7 +11,7 @@
   <xacro:macro name="hku_m100_base_macro">
     <link name="base_link">
       <inertial>
-        <mass value="1.477" />
+        <mass value="2.477" />
         <origin xyz="0 0 0" />
         <inertia ixx="0.01152" ixy="0.0" ixz="0.0" iyy="0.01152" iyz="0.0" izz="0.0218" />
       </inertial>
@@ -71,6 +71,13 @@
     <origin xyz="0.05 0.0 -0.06" rpy="0 0 0"/>
   </xacro:gimbal_camera>
  -->
+<!-- ###################################################################################################### -->
+<!-- ###################################################################################################### -->
+
+<!-- HOKUYO -->
+
+<!-- ###################################################################################################### -->
+<!-- ###################################################################################################### -->
 
 
     <joint name="laser_joint" type="fixed">
@@ -102,15 +109,15 @@
       <ray>
         <scan>
           <horizontal>
-            <samples>1080</samples>
-            <resolution>0.25</resolution>
-            <min_angle>-2.3561945</min_angle>
-            <max_angle>2.3561945</max_angle>
+            <samples>1081</samples>
+            <!-- <resolution>0.25</resolution> -->
+            <min_angle>-2.35619449615</min_angle>
+            <max_angle>2.35619449615</max_angle>
           </horizontal>
         </scan>
         <range>
           <min>0.10</min>
-          <max>30.0</max>
+          <max>10.0</max>
           <resolution>0.01</resolution>
         </range>
         <noise>
@@ -130,6 +137,13 @@
     </sensor>
   </gazebo>
 
+<!-- ###################################################################################################### -->
+<!-- ###################################################################################################### -->
+
+<!-- CAMERA -->
+
+<!-- ###################################################################################################### -->
+<!-- ###################################################################################################### -->
 
    <joint name="camera_joint" type="floating">
       <origin xyz="0.1 0 -0.04" rpy="0 0 0"/>
@@ -172,11 +186,12 @@
           <!-- <pose>0.027 0 -0.027 0 1.57 0</pose> -->
           <!-- <pose>0.027 0 -0.027 0 1.57 0</pose> -->
           <pose>0.027 0 -0.027 0 0 0</pose>
-          <horizontal_fov>${94 * M_PI/180.0}</horizontal_fov>
+          <horizontal_fov>${64.5 * M_PI/180.0}</horizontal_fov>
+          <!-- <vertical_fov>${46.6 * M_PI/180.0}</vertical_fov> -->
           <image>
             <format>R8G8B8</format>
-            <width>640</width>
-            <height>480</height>
+            <width>1280</width>
+            <height>720</height>
           </image>
           <clip>
             <near>0.01</near>
@@ -189,8 +204,8 @@
           <alwaysOn>true</alwaysOn>
           <updateRate>30</updateRate>
           
-          <imageTopicName>/dji_sdk/image_raw</imageTopicName>
-          <cameraInfoTopicName>/dji_sdk/camera_info</cameraInfoTopicName>
+          <imageTopicName>/camera/image_raw</imageTopicName>
+          <cameraInfoTopicName>/camera/camera_info</cameraInfoTopicName>
           <!-- <imageTopicName>camera/image</imageTopicName> -->
           <!-- <cameraInfoTopicName>camera/camera_info</cameraInfoTopicName> -->
           <frameName>camera_optical_frame</frameName>

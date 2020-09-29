@@ -11,7 +11,6 @@
 
   <arg name="use_ground_truth_for_tf" default="true" />
 
-
   <arg name="world_frame" default="world"/> <!-- This should actually be "/world". See https://github.com/ros-simulation/gazebo_ros_pkgs/pull/324 -->
   <arg name="base_link_frame" default="$(arg tf_prefix)/base_link"/>
 

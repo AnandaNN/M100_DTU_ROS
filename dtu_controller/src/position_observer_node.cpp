@@ -76,9 +76,11 @@ int main(int argc, char** argv)
   if( !nh.param("/dtu_controller/position_observer/simulation", simulation, false) ) ROS_INFO("Simulation not specified");
   if( !nh.param("/dtu_controller/position_observer/positioning", positioning, (int)GPS) ) ROS_INFO("NO POSITIONING SPECIFIED");
 
+  if( simulation ) ROS_INFO("############## Simultion is set TRUE #################");
+
   readParameters( nh );
 
-  odo.startOdometry( nh );
+  if( !simulation ) odo.startOdometry( nh );
 
   // Publisher for control values
   currentPosePub = nh.advertise<geometry_msgs::Twist>("/dtu_controller/current_frame_pose", 0);
@@ -204,13 +206,29 @@ void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPositio
     wallPosition.angular.y = 0;
     wallPosition.angular.z = wallPosition.angular.z*0.5 + ang*0.5;
 
+    if( positioning == WALL_POSITION )
+    {
+
     float rot = wallPosition.angular.z - guidanceLocalPose.angular.z;
 
     // ROS_INFO("wall = %f | global = %f | rot = %f", wallPosition.angular.z*180/3.14159, guidanceLocalPose.angular.z*180/3.14159, rot * 180/3.14159 );
 
     wallPosition.linear.y = guidanceLocalPose.linear.x * sin( rot ) 
                               + guidanceLocalPose.linear.y * cos( rot );
-                              
+      
+    }
+    else if( positioning == WALL_WITH_GPS_Y)
+    {
+
+    float rot = wallPosition.angular.z - attitude.z;
+
+    // ROS_INFO("wall = %f | global = %f | rot = %f", wallPosition.angular.z*180/3.14159, guidanceLocalPose.angular.z*180/3.14159, rot * 180/3.14159 );
+
+    wallPosition.linear.y = localPosition.x * sin( rot ) 
+                              + localPosition.y * cos( rot );
+      
+    }
+                        
   }
 }
 
@@ -422,4 +440,5 @@ void observerLoopCallback( const ros::TimerEvent& )
 
     currentPosePub.publish(currentPose); 
   }
+  
 }

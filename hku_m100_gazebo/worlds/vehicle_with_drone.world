@@ -62,9 +62,8 @@
       </link>
     </model>
     <physics type='ode'>
-      <max_step_size>0.001</max_step_size>
+      <max_step_size>0.005</max_step_size>
       <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>1000</real_time_update_rate>
       <gravity>0 0 -9.8</gravity>
     </physics>
     <scene>
@@ -80,18 +79,6 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>224 232000000</sim_time>
-      <real_time>27 884236464</real_time>
-      <wall_time>1467198854 300936514</wall_time>
-      <model name='ground_plane'>
-        <pose>0 0 0 0 -0 0</pose>
-        <link name='link'>
-          <pose>0 0 0 0 -0 0</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
       <model name='polaris_ranger_xp900'>
         <pose>2.47527 -3.4377 -0.027842 0 2.1e-05 -1.1e-05</pose>
         <link name='FNR_switch'>
