@@ -18,8 +18,8 @@
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
-            <!-- <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" /> -->
-            <rosparam command="load" file="$(find dtu_controller)/parameters/simple_test.yaml" />
+            <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" />
+            <!-- <rosparam command="load" file="$(find dtu_controller)/parameters/simple_test.yaml" /> -->
         </node>
 
         <node pkg="dtu_controller" type="position_observer_node" name="position_observer" output="screen">
@@ -28,7 +28,9 @@
             <param name="positioning" type="int" value="$(arg positioning)"/>
         </node>
 
-        <node pkg="dtu_controller" type="ransac_laser.py" name="ransac_laser" output="screen" />
+        <!-- <node pkg="dtu_controller" type="ransac_laser.py" name="ransac_laser" output="screen" /> -->
+
+        <include file="$(find dtu_controller)/launch/ransac_laser.launch" />
 
         <!-- <node pkg="dtu_controller" type="basic_control_mission" name="basic_control_mission" output="screen" /> -->
 

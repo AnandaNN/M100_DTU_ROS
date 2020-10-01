@@ -28,7 +28,10 @@
             <param name="positioning" type="int" value="$(arg positioning)"/>
         </node>
 
+        <!-- OLD NODE USE LAUNCH INSTEAD-->
         <!-- <node pkg="dtu_controller" type="ransac_laser.py" name="ransac_laser" output="screen" /> -->
+        
+        <include file="$(find dtu_controller)/launch/ransac_laser.launch" />
 
         <node pkg="dtu_controller" type="switch_on_controller_test" name="switch_on_controller_test" output="screen" />
 

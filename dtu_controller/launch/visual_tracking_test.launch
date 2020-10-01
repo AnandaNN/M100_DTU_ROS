@@ -16,23 +16,14 @@
 
     <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
 
-    <!-- launch video stream -->
-    <include file="$(find video_stream_opencv)/launch/camera.launch" >
-   		<!-- node name and ros graph name -->
-	  	<arg name="camera_name" value="webcam" />
-        <arg name="fps" value="30" />
-	  	<!-- setting frame_id and resolution -->
-	  	<arg name="frame_id" value="webcam_optical_frame" />
-   	    <arg name="width" value="1280"/>
-  	    <arg name="height" value="720"/>
-    </include>
+    <include file="$(find dtu_controller)/launch/arducam.launch" />
 
     <node pkg="LT_tracker_w_gui" type="LT_tracker.py" name="LT_tracker" output="screen" />
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
-            <!-- <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" /> -->
-            <rosparam command="load" file="$(find dtu_controller)/parameters/simple_test.yaml" />
+            <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" />
+            <!-- <rosparam command="load" file="$(find dtu_controller)/parameters/simple_test.yaml" /> -->
         </node>
 
         <node pkg="dtu_controller" type="position_observer_node" name="position_observer" output="screen">
@@ -41,7 +32,10 @@
             <param name="positioning" type="int" value="$(arg positioning)"/>
         </node>
 
-        <node pkg="dtu_controller" type="ransac_laser.py" name="ransac_laser" output="screen" />
+        <!-- OLD NODE USE LAUNCH INSTEAD-->
+        <!-- <node pkg="dtu_controller" type="ransac_laser.py" name="ransac_laser" output="screen" /> -->
+        <include file="$(find dtu_controller)/launch/ransac_laser.launch" />
+
 
         <node pkg="dtu_controller" type="visual_tracking_test" name="visual_tracking_test" output="screen" />
 

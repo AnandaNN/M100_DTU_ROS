@@ -24,7 +24,7 @@ max_angle = 45
 # Set the script into debugging mode
 debug = False
 
-scan_pub = rospy.Publisher('scan', LaserScan, queue_size=1)
+scan_pub = rospy.Publisher('ransac_scan', LaserScan, queue_size=1)
 
 laser = None
 
@@ -348,7 +348,7 @@ def wall_position(debug=False):
     # Create the hokuyo laser object
     # laser = HokuyoLX()
 
-    laserSub = rospy.Subscriber('/laserscan', LaserScan, laserSubCallback)
+    laserSub = rospy.Subscriber('scan', LaserScan, laserSubCallback)
 
     # Create the publisher
     pub = rospy.Publisher('wall_position', Float32MultiArray, queue_size=1)
@@ -360,7 +360,7 @@ def wall_position(debug=False):
     # Create the node
     rospy.init_node('wall', anonymous=True)
     # Set the rate. Not sure what this should be
-    rate = rospy.Rate(50)
+    rate = rospy.Rate(40)
     # Keep the loop alive
     while not rospy.is_shutdown():
         # Obtain a laser measurement
