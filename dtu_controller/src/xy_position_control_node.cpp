@@ -190,7 +190,7 @@ void updatePoseCallback( const geometry_msgs::Twist pose )
 
 void updateReferenceCallback( const geometry_msgs::Twist reference )
 {
-  ROS_INFO("Reference udpated");
+  // ROS_INFO("Reference udpated");
   goalReference = reference;
   referenceUpdated = true;
 }
@@ -222,9 +222,9 @@ void rampReferenceUpdate()
 
       referenceUpdated = false;
 
-      ROS_INFO("### Reference Updated ###");
-      ROS_INFO("Est travel time: %.2f", estTime);
-      ROS_INFO("Steps: %.4f  %.4f  %.4f", referenceSteps.linear.x, referenceSteps.linear.y, referenceSteps.linear.z);
+      // ROS_INFO("### Reference Updated ###");
+      // ROS_INFO("Est travel time: %.2f", estTime);
+      // ROS_INFO("Steps: %.4f  %.4f  %.4f", referenceSteps.linear.x, referenceSteps.linear.y, referenceSteps.linear.z);
     }
     
     float tolerance = 2;

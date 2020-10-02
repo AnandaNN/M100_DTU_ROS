@@ -1,16 +1,20 @@
-/** @file demo_joy_rpyrate_zvel.cpp
+/** @file joy_roll_thrust_controller_node.cpp
  *  @version 3.3
  *  @date June, 2020
  *
  *  @brief
- *  demo sample of joy stick with rpyrate zvel control
+ *  demo sample of joy stick with rpyrate zvel control with ability to switch to roll thrust command scehme for wall interaction
  *
  *  @copyright 2020 Ananda Nielsen, DTU. All rights reserved.
  *
  */
 
-#include "demo_joy_rpyrate_zvel.h"
+#include "joy_roll_thrust_controller_node.h"
 #include "dji_sdk/dji_sdk.h"
+#include "geometry_msgs/QuaternionStamped.h"
+#include "geometry_msgs/Vector3.h"
+#include <tf/tf.h>
+#include "sensor_msgs/Imu.h"
 
 const float deg2rad = C_PI/180.0;
 const float rad2deg = 180.0/C_PI;
@@ -25,7 +29,13 @@ ros::ServiceClient arm_control_service;
 
 ros::Publisher ctrlAttitudePub;
 
+ros::Subscriber attitudeQuaternionSub;
+ros::Subscriber imuSub;
+
 sensor_msgs::Joy controlValue;
+sensor_msgs::Imu imuValue;
+
+geometry_msgs::Vector3 attitude;
 
 // global variables for subscribed topics
 uint8_t flight_status = 255;
@@ -41,6 +51,9 @@ int main(int argc, char** argv)
   ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_rollpitch_yawrate_zvelocity", 0);
   // ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUposition_yaw", 0);
   // ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUvelocity_yawrate", 0);
+
+  attitudeQuaternionSub = nh.subscribe<geometry_msgs::QuaternionStamped>( "/dji_sdk/attitude", 0, attitudeCallback );
+  imuSub = nh.subscribe<sensor_msgs::Imu>( "/dji_sdk/imu", 0, imuCallback );
   
   // Basic services
   sdk_ctrl_authority_service = nh.serviceClient<dji_sdk::SDKControlAuthority> ("dji_sdk/sdk_control_authority");
@@ -71,6 +84,20 @@ int main(int argc, char** argv)
   return 0;
 }
 
+void imuCallback( const sensor_msgs::Imu imuMsg )
+{
+  imuValue = imuMsg;
+  // ROS_INFO("%f", imuValue.angular_velocity.z);
+}
+
+void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
+{
+  tf::Quaternion currentQuaternion(quaternion.quaternion.x, quaternion.quaternion.y, quaternion.quaternion.z, quaternion.quaternion.w);
+  tf::Matrix3x3 R_FLU2ENU(currentQuaternion);
+  R_FLU2ENU.getRPY(attitude.x, attitude.y, attitude.z);
+  
+}
+
 void controlCallback( const sensor_msgs::Joy joy_msg )
 {
   int thrust_id = 1;
@@ -93,6 +120,14 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
   controlValue.axes[1] = pitch;
   controlValue.axes[2] = z_vel;
   controlValue.axes[3] = yaw;
+
+  if( joy_msg.buttons[4] )
+  {
+    controlValue.axes[0] = roll;
+    controlValue.axes[1] = attitude.y;
+    controlValue.axes[2] = z_vel;
+    controlValue.axes[3] = imuValue.angular_velocity.z;
+  }
 
   // ctrlAttitudePub.publish(controlValue);
 

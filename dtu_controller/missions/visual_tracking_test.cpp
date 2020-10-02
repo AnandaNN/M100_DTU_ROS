@@ -14,6 +14,9 @@
 #include "dji_sdk/dji_sdk.h"
 
 #include <std_msgs/Bool.h>
+
+#include <std_msgs/UInt8.h>
+
 #include <geometry_msgs/Point.h>
 
 // Own includes
@@ -65,22 +68,22 @@ int main(int argc, char** argv)
   targetErrorSub_2 = nh.subscribe<geometry_msgs::Point>("/distance_error", 1, &targetErrorCallback_2);
   currentPoseSub_2 = nh.subscribe<geometry_msgs::Twist>("current_frame_pose", 1, &currentPoseCallback_2);
 
-  ROS_INFO("Ready to take over");
+  ROS_INFO("Ready to take over. Waiting for command");
   
   /******************************************************************/
 
-  boost::shared_ptr<std_msgs::Bool const> sharedTrackEnable;
-  std_msgs::Bool trackerEnabled;
+  boost::shared_ptr<std_msgs::UInt8 const> sharedTrackEnable;
+  std_msgs::UInt8 trackerEnabled;
   trackerEnabled.data = 0;
 
   while(ros::ok()) 
   {
-    sharedTrackEnable = ros::topic::waitForMessage<std_msgs::Bool>("/target_tracking_enable", nh);
+    sharedTrackEnable = ros::topic::waitForMessage<std_msgs::UInt8>("/target_tracking_msg", nh);
     if(sharedTrackEnable != NULL){
         trackerEnabled = *sharedTrackEnable;
     }
 
-    if( trackerEnabled.data )
+    if( trackerEnabled.data == (uint8_t) 1 )
     {
       ROS_INFO("User selected a target. Starting tracking");
       if( set_control_authority(nh, true) ) ROS_INFO("Got control authorithy");
@@ -103,11 +106,28 @@ int main(int argc, char** argv)
   ROS_INFO("Starting the target tracking");
   while( ros::ok() )
   {
+    sharedTrackEnable = ros::topic::waitForMessage<std_msgs::UInt8>("/target_tracking_msg", nh);
+    if(sharedTrackEnable != NULL){
+        trackerEnabled = *sharedTrackEnable;
+    }
+
+    // ROS_INFO("Trak = %d", trackerEnabled.data);
+
+    if( trackerEnabled.data >= (uint8_t) 2 )
+    {
+      ROS_INFO_ONCE("Starting the approach!");
+      xTarget = -((float)trackerEnabled.data-1);
+    }
+    if( trackerEnabled.data == (uint8_t) 0 )
+    {
+      ROS_INFO("Stopping control");
+      break;
+    }
     // ROS_INFO("%d %d", newError, oldError);
     if( newError > oldError )
     {
       controllerInterface.set_reference(xTarget, currentPosition.linear.y - yError, currentPosition.linear.z - zError, 0);
-      ROS_INFO("%f, %f, %f, %f",xTarget, currentPosition.linear.y - yError, currentPosition.linear.z - zError, 0.0);
+      // ROS_INFO("%f, %f, %f, %f",xTarget, currentPosition.linear.y - yError, currentPosition.linear.z - zError, 0.0);
       oldError = newError;
     }
     // ros::Duration(0.01).sleep();

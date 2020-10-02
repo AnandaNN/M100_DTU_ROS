@@ -1,7 +1,7 @@
 <launch>
 
-    <arg name="simulation" default="false"/>
-    <arg name="positioning" default="3"/>
+    <arg name="simulation" default="true"/>
+    <arg name="positioning" default="4"/>
 
     <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
         <!-- node parameters -->
@@ -14,13 +14,13 @@
         <param name="use_broadcast" type="bool" value="false"/>
     </node>
 
-    <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+    <!-- <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" /> -->
 
-    <include file="$(find dtu_controller)/launch/arducam.launch" />
+    <!-- <include file="$(find dtu_controller)/launch/arducam.launch" /> -->
 
     <node pkg="LT_tracker_w_gui" type="LT_tracker.py" name="LT_tracker" output="screen" />
 
-    <!-- <include file="$(find LT_tracker_w_gui)/launch/gui.launch" /> -->
+    <include file="$(find LT_tracker_w_gui)/launch/gui.launch" />
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
@@ -35,8 +35,8 @@
         </node>
 
         <!-- OLD NODE USE LAUNCH INSTEAD-->
-        <!-- <node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" /> -->
-        <include file="$(find dtu_controller)/launch/ransac_laser.launch" />
+        <node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" />
+        <!-- <include file="$(find dtu_controller)/launch/ransac_laser.launch" /> -->
 
 
         <node pkg="dtu_controller" type="visual_tracking_test" name="visual_tracking_test" output="screen" />

@@ -109,6 +109,8 @@ int main(int argc, char** argv)
   // else if( positioning == GUIDANCE ) ROS_INFO("Using GUIDANCE for start!");
   // else if( positioning == WALL_POSITION ) ROS_INFO("Using Wall positioning for start!");
 
+  // ROS_INFO("Position = %d (%d)", positioning, (WALL))
+
   if( positioning == GUIDANCE )
   {
     ROS_INFO("Using GUIDANCE for start!");
@@ -129,7 +131,7 @@ int main(int argc, char** argv)
     currentPose.angular.z = attitude.z;
     
   }
-  else if ( positioning == WALL_POSITION )
+  else if ( positioning == WALL_POSITION || positioning == WALL_WITH_GPS_Y )
   {
     ROS_INFO("Using Wall positioning for start!");
     ROS_INFO("%f",wallPosition.linear.x);
@@ -373,7 +375,7 @@ void observerLoopCallback( const ros::TimerEvent& )
       truePose.angular.z = attitude.z;
       
     }
-    else if ( positioning == WALL_POSITION )
+    else if ( positioning == WALL_POSITION || positioning == WALL_WITH_GPS_Y )
     {
       truePose.linear.x = wallPosition.linear.x;
       truePose.linear.y = wallPosition.linear.y;

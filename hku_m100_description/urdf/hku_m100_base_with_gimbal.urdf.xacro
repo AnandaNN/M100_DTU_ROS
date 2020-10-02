@@ -131,7 +131,7 @@
         </noise>
       </ray>
       <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_gpu_laser.so">
-        <topicName>laserscan</topicName>
+        <topicName>/dtu_controller/scan</topicName>
         <frameName>hokuyo_link</frameName>
       </plugin>
     </sensor>
@@ -203,9 +203,9 @@
           <cameraName>camera</cameraName>
           <alwaysOn>true</alwaysOn>
           <updateRate>30</updateRate>
-          
-          <imageTopicName>/camera/image_raw</imageTopicName>
-          <cameraInfoTopicName>/camera/camera_info</cameraInfoTopicName>
+          <focal_length>1070</focal_length>
+          <imageTopicName>/usb_cam/image_raw</imageTopicName>
+          <cameraInfoTopicName>/usb_cam/camera_info</cameraInfoTopicName>
           <!-- <imageTopicName>camera/image</imageTopicName> -->
           <!-- <cameraInfoTopicName>camera/camera_info</cameraInfoTopicName> -->
           <frameName>camera_optical_frame</frameName>

@@ -22,6 +22,7 @@
 // New
 #include <geometry_msgs/QuaternionStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
+#include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/PointStamped.h>
 
 #include <tf/LinearMath/Quaternion.h>
@@ -98,10 +99,25 @@ tf::Quaternion gimbal_pitch_q;
 //void attitudeQuaternionCallback(const dji_sdk::AttitudeQuaternion::ConstPtr& attitude_quaternion_msg)
 void attitudeQuaternionCallback(const geometry_msgs::QuaternionStamped::ConstPtr& attitude_quaternion_msg)
 {
-  target_pose.orientation.w = attitude_quaternion_msg->quaternion.w; // -
-  target_pose.orientation.x = attitude_quaternion_msg->quaternion.x; // -
-  target_pose.orientation.y = attitude_quaternion_msg->quaternion.y;
-  target_pose.orientation.z = attitude_quaternion_msg->quaternion.z;
+  tf::Quaternion current_target_quat(attitude_quaternion_msg->quaternion.x, attitude_quaternion_msg->quaternion.y, attitude_quaternion_msg->quaternion.z, attitude_quaternion_msg->quaternion.w);
+  // target_pose.orientation.w = attitude_quaternion_msg->quaternion.w; // -
+  // target_pose.orientation.x = attitude_quaternion_msg->quaternion.x; // -
+  // target_pose.orientation.y = attitude_quaternion_msg->quaternion.y;
+  // target_pose.orientation.z = attitude_quaternion_msg->quaternion.z;
+  
+  geometry_msgs::Vector3 current_attitude;
+  tf::Matrix3x3 R_FLU2ENU(current_target_quat);
+  R_FLU2ENU.getRPY(current_attitude.x, current_attitude.y, current_attitude.z);
+  
+  if( (current_attitude.z > -M_PI) && (current_attitude.z < -M_PI_2 ) ) current_attitude.z += M_PI_2 + M_PI;
+  else current_attitude.z -= M_PI_2;
+
+  current_target_quat.setRPY(current_attitude.x, current_attitude.y, current_attitude.z);
+
+  target_pose.orientation.w = current_target_quat.getW(); // -
+  target_pose.orientation.x = current_target_quat.getX(); // -
+  target_pose.orientation.y = current_target_quat.getY();
+  target_pose.orientation.z = current_target_quat.getZ();
 
   // ROS_INFO("Quat XYZW = %.2f   %.2f   %.2f   %.2f", attitude_quaternion_msg->quaternion.x, attitude_quaternion_msg->quaternion.y, attitude_quaternion_msg->quaternion.z, attitude_quaternion_msg->quaternion.w);
 
@@ -159,8 +175,8 @@ void velocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr velocity_msg
 //void localPositionCallback(const dji_sdk::LocalPosition::ConstPtr& position_msg)
 void localPositionCallback(const geometry_msgs::PointStamped::ConstPtr& position_msg)
 {
-  target_pose.position.x = position_msg->point.x;
-  target_pose.position.y = position_msg->point.y;
+  target_pose.position.x = position_msg->point.y;
+  target_pose.position.y = -position_msg->point.x;
   target_pose.position.z = position_msg->point.z + 0.115;
 
   position_updated = true;
