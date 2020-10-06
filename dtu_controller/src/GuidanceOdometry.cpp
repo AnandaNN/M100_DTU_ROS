@@ -25,8 +25,8 @@ void GuidanceOdometry::startOdometry( ros::NodeHandle nh )
   ROS_INFO( "Starting odometry" );
 
   // Guidance subscribers
-  _ultraSonicSubscriber = nh.subscribe<sensor_msgs::LaserScan>("/guidance/ultrasonic", 0, &GuidanceOdometry::ultraSonicCallback, this);
-  _motionSubscriber = nh.subscribe<guidance::Motion>("/guidance/motion", 0, &GuidanceOdometry::motionCallback, this);
+  _ultraSonicSubscriber = nh.subscribe<sensor_msgs::LaserScan>("/guidance/ultrasonic", 1, &GuidanceOdometry::ultraSonicCallback, this);
+  _motionSubscriber = nh.subscribe<guidance::Motion>("/guidance/motion", 1, &GuidanceOdometry::motionCallback, this);
 
   // Wait for first position messages recieved
   while( _motionMsgNum < 1 && _ultraMsgNum < 1 )

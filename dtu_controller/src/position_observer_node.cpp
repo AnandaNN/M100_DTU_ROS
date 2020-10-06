@@ -83,22 +83,22 @@ int main(int argc, char** argv)
   if( !simulation ) odo.startOdometry( nh );
 
   // Publisher for control values
-  currentPosePub = nh.advertise<geometry_msgs::Twist>("/dtu_controller/current_frame_pose", 0);
+  currentPosePub = nh.advertise<geometry_msgs::Twist>("/dtu_controller/current_frame_pose", 1);
 
   // Initialize subsrcibers
   // Subscribers from DJI node
-  localGPSPositionSub = nh.subscribe<geometry_msgs::PointStamped>( "/dji_sdk/local_position", 0, localPositionCallback );
-  attitudeQuaternionSub = nh.subscribe<geometry_msgs::QuaternionStamped>( "/dji_sdk/attitude", 0, attitudeCallback );
-  gpsHealthSub = nh.subscribe<std_msgs::UInt8>("/dji_sdk/gps_health", 0, gpsHealthCallback);
-  ultraHeightSub = nh.subscribe<std_msgs::Float32>("/dji_sdk/height_above_takeoff", 0, ultraHeightCallback);
-  imuSub = nh.subscribe<sensor_msgs::Imu>("/dji_sdk/imu", 0, imuCallback);
+  localGPSPositionSub = nh.subscribe<geometry_msgs::PointStamped>( "/dji_sdk/local_position", 1, localPositionCallback );
+  attitudeQuaternionSub = nh.subscribe<geometry_msgs::QuaternionStamped>( "/dji_sdk/attitude", 1, attitudeCallback );
+  gpsHealthSub = nh.subscribe<std_msgs::UInt8>("/dji_sdk/gps_health", 1, gpsHealthCallback);
+  ultraHeightSub = nh.subscribe<std_msgs::Float32>("/dji_sdk/height_above_takeoff", 1, ultraHeightCallback);
+  imuSub = nh.subscribe<sensor_msgs::Imu>("/dji_sdk/imu", 1, imuCallback);
 
   // Guidance subscribers
-  ultrasonicSub = nh.subscribe<sensor_msgs::LaserScan>("/guidance/ultrasonic", 0, ultrasonicCallback);
-  guidanceMotionSub = nh.subscribe<guidance::Motion>("/guidance/motion", 0, guidanceMotionCallback);
+  ultrasonicSub = nh.subscribe<sensor_msgs::LaserScan>("/guidance/ultrasonic", 1, ultrasonicCallback);
+  guidanceMotionSub = nh.subscribe<guidance::Motion>("/guidance/motion", 1, guidanceMotionCallback);
 
   // Laser scanner subscriber
-  wallPositionSub = nh.subscribe<std_msgs::Float32MultiArray>("/dtu_controller/wall_position", 0, wallPositionCallback );
+  wallPositionSub = nh.subscribe<std_msgs::Float32MultiArray>("/dtu_controller/wall_position", 1, wallPositionCallback );
   
   ros::Duration(2).sleep();
 

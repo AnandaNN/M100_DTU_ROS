@@ -66,12 +66,15 @@ def main_laser(ax, canvas, debug=False):
 
     # return 0, 0, 0, ax, canvas, 0, 0, 0, 0
 
-    scan_cp = np.zeros((780 - 340 + 1,2))
+    #scan_cp = np.zeros((780 - 340 + 1,2))
+    scan_cp = np.zeros((440 + 1,2))
     scan_cp[:,0] = np.arange(-0.00436332309619*220, 0.00436332309619*221, 0.00436332309619)
-    scan_cp[:,1] = np.array(laser.ranges[340:781])*1000
+    #scan_cp[:,1] = np.array(laser.ranges[340:781])*1000
+    scan_cp[:,1] = np.array(laser.ranges[320:761])*1000
     scan_cp[scan_cp[:,1]>10000,1] = 10000
     
-    scan = scan_cp[scan_cp[:,1]<10000,:]
+    #scan = scan_cp[scan_cp[:,1]<10000,:]
+    scan = scan_cp.copy()
 
     # print(scan_cp)
 
@@ -132,8 +135,8 @@ def main_laser(ax, canvas, debug=False):
     n = 0
     attempts = 0
 
-    inliers = np.zeros(scan.shape[0], dtype=int)
-
+    inliers = np.zeros(scan_cp.shape[0], dtype=int)
+    # print(inliers.shape)
     while True:
         if data.shape[0] < 20:
             break
@@ -242,7 +245,8 @@ def main_laser(ax, canvas, debug=False):
     scan_msg.ranges = scan_cp[:,1]*0.001
     scan_msg.range_min = 0.2
     scan_msg.range_max = 10.1
-    scan_msg.intensities = 500*np.ones((441,1),dtype=int)
+    #scan_msg.intensities = 500*np.ones((441,1),dtype=int)
+    scan_msg.intensities = inliers
 
     #print(len(scan_cp[:,1]))
     #print(len(inliers))
@@ -348,6 +352,7 @@ def wall_position(debug=False):
     # Create the hokuyo laser object
     # laser = HokuyoLX()
 
+    global laser
     laserSub = rospy.Subscriber('scan', LaserScan, laserSubCallback)
 
     # Create the publisher
@@ -365,7 +370,10 @@ def wall_position(debug=False):
     while not rospy.is_shutdown():
         # Obtain a laser measurement
         #x, y, angle, ax, canvas, x_est, y_est, yaw_est, valid = main_laser(laser, ax, canvas, debug)
-        x, y, angle, ax, canvas, x_est, y_est, yaw_est, valid = main_laser(ax, canvas, debug)
+        if laser != None:
+            x, y, angle, ax, canvas, x_est, y_est, yaw_est, valid = main_laser(ax, canvas, debug)
+        else:
+            continue
         # Convert it to the ros array
         msg = Float32MultiArray()
         msg.data = [x, y, (angle), valid]

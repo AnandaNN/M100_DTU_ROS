@@ -48,12 +48,12 @@ int main(int argc, char** argv)
 
   ros::Duration(5).sleep();
 
-  ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_rollpitch_yawrate_zvelocity", 0);
+  ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_rollpitch_yawrate_zvelocity", 1);
   // ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUposition_yaw", 0);
   // ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUvelocity_yawrate", 0);
 
-  attitudeQuaternionSub = nh.subscribe<geometry_msgs::QuaternionStamped>( "/dji_sdk/attitude", 0, attitudeCallback );
-  imuSub = nh.subscribe<sensor_msgs::Imu>( "/dji_sdk/imu", 0, imuCallback );
+  attitudeQuaternionSub = nh.subscribe<geometry_msgs::QuaternionStamped>( "/dji_sdk/attitude", 1, attitudeCallback );
+  imuSub = nh.subscribe<sensor_msgs::Imu>( "/dji_sdk/imu", 1, imuCallback );
   
   // Basic services
   sdk_ctrl_authority_service = nh.serviceClient<dji_sdk::SDKControlAuthority> ("dji_sdk/sdk_control_authority");
@@ -63,6 +63,8 @@ int main(int argc, char** argv)
 
   arm_control_service = nh.serviceClient<dji_sdk::DroneArmControl> ("/dji_sdk/drone_arm_control");
 
+  ros::Duration(1).sleep();
+
   if( obtain_control() ) ROS_INFO("GOT CONTROL!");
   else return 0;
 
@@ -71,7 +73,7 @@ int main(int argc, char** argv)
   controlValue.axes.push_back(0);
   controlValue.axes.push_back(0);
 
-  ros::Duration(1).sleep();
+  ros::Duration(0.5).sleep();
 
   ros::Timer timer = nh.createTimer(ros::Duration(1.0/50.0), timerCallback);
   ros::Subscriber joy_subscriber = nh.subscribe("dji_sdk/joy", 0, &controlCallback);
@@ -100,10 +102,10 @@ void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
 
 void controlCallback( const sensor_msgs::Joy joy_msg )
 {
-  int thrust_id = 1;
-  int yaw_id = 0;
-  int roll_id = 3;
-  int pitch_id = 4;
+  int thrust_id = 2; // 1
+  int yaw_id = 3; // 0
+  int roll_id = 0; // 3
+  int pitch_id = 1; // 2
   
   float z_vel = 2 * joy_msg.axes[thrust_id];
   float yaw = 100*deg2rad * joy_msg.axes[yaw_id];
@@ -113,7 +115,7 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
   // x = 0, o = 1, tri = 2, sq = 3
 
   //int button = 
-  if( joy_msg.buttons[2] && motor_status == false ) arm_motors();
+  // if( joy_msg.buttons[2] && motor_status == false ) arm_motors();
   // if( joy_msg.buttons[3] && motor_status == true ) disarm_motors();
 
   controlValue.axes[0] = roll;
@@ -121,7 +123,7 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
   controlValue.axes[2] = z_vel;
   controlValue.axes[3] = yaw;
 
-  if( joy_msg.buttons[4] )
+  if( joy_msg.axes[4] < 0.5 )
   {
     controlValue.axes[0] = roll;
     controlValue.axes[1] = attitude.y;
@@ -131,7 +133,7 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
 
   // ctrlAttitudePub.publish(controlValue);
 
-  ROS_INFO("%f %f %f %f", z_vel, yaw, roll, pitch);
+  ROS_INFO("Z: %f | Yaw: %f | Roll: %f | Pitch: %f |", z_vel, yaw, roll, pitch);
 
 }
 

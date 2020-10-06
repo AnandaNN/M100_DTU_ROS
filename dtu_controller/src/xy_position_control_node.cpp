@@ -58,9 +58,9 @@ int main(int argc, char** argv)
   currentFramePub = nh.advertise<geometry_msgs::Twist>("current_frame_reference", 1);
 
   // Subscriber
-  ros::Subscriber controlStatusSub = nh.subscribe("control_status", 0, &checkControlStatusCallback );
-  ros::Subscriber poseSub = nh.subscribe("current_frame_pose", 0, &updatePoseCallback );
-  ros::Subscriber referenceSub = nh.subscribe("current_frame_goal_reference", 0, &updateReferenceCallback );
+  ros::Subscriber controlStatusSub = nh.subscribe("control_status", 1, &checkControlStatusCallback );
+  ros::Subscriber poseSub = nh.subscribe("current_frame_pose", 1, &updatePoseCallback );
+  ros::Subscriber referenceSub = nh.subscribe("current_frame_goal_reference", 1, &updateReferenceCallback );
 
   // Initialize the 4 control values
   controlValue.axes.push_back(0);

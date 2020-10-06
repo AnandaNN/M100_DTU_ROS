@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 
   ros::Duration(5).sleep();
 
-  ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_rollpitch_yawrate_zvelocity", 0);
+  ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_rollpitch_yawrate_zvelocity", 1);
   // ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUposition_yaw", 0);
   // ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUvelocity_yawrate", 0);
   
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
   ros::Duration(1).sleep();
 
   ros::Timer timer = nh.createTimer(ros::Duration(1.0/50.0), timerCallback);
-  ros::Subscriber joy_subscriber = nh.subscribe("dji_sdk/joy", 0, &controlCallback);
+  ros::Subscriber joy_subscriber = nh.subscribe("dji_sdk/joy", 1, &controlCallback);
 
   ros::spin();
 
