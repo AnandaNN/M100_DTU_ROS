@@ -123,7 +123,7 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
   controlValue.axes[2] = z_vel;
   controlValue.axes[3] = yaw;
 
-  if( joy_msg.axes[4] < 0.5 )
+  if( joy_msg.axes[4] < -0.5 )
   {
     controlValue.axes[0] = roll;
     controlValue.axes[1] = attitude.y;

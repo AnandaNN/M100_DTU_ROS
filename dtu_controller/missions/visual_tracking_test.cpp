@@ -27,11 +27,13 @@ float zError = 0;
 float yError = 0;
 int newError = 0;
 int oldError = 0;
+std_msgs::UInt8 trackerEnabled;
 
 geometry_msgs::Twist currentPosition;
 
 ros::Subscriber targetErrorSub_2;
 ros::Subscriber currentPoseSub_2;
+ros::Subscriber targetMsgSub;
 
 // void targetErrorCallback( const geometry_msgs::Point pointMsg );
 // void currentPoseCallback( const geometry_msgs::Twist twistMsg );
@@ -48,6 +50,13 @@ void currentPoseCallback_2( const geometry_msgs::Twist twistMsg )
 {
   currentPosition = twistMsg;
 
+  // ROS_INFO("Got msg TWIST");
+}
+
+void targetMsgCallback( const std_msgs::UInt8 msg )
+{
+  
+  trackerEnabled = msg;
   // ROS_INFO("Got msg TWIST");
 }
 
@@ -68,20 +77,22 @@ int main(int argc, char** argv)
   targetErrorSub_2 = nh.subscribe<geometry_msgs::Point>("/distance_error", 1, &targetErrorCallback_2);
   currentPoseSub_2 = nh.subscribe<geometry_msgs::Twist>("current_frame_pose", 1, &currentPoseCallback_2);
 
+  targetMsgSub = nh.subscribe<std_msgs::UInt8>("/target_tracking_msg", 1, &targetMsgCallback);
+
   ROS_INFO("Ready to take over. Waiting for command");
   
   /******************************************************************/
 
-  boost::shared_ptr<std_msgs::UInt8 const> sharedTrackEnable;
-  std_msgs::UInt8 trackerEnabled;
+  // boost::shared_ptr<std_msgs::UInt8 const> sharedTrackEnable;
+  //std_msgs::UInt8 trackerEnabled;
   trackerEnabled.data = 0;
 
   while(ros::ok()) 
   {
-    sharedTrackEnable = ros::topic::waitForMessage<std_msgs::UInt8>("/target_tracking_msg", nh);
-    if(sharedTrackEnable != NULL){
-        trackerEnabled = *sharedTrackEnable;
-    }
+    // sharedTrackEnable = ros::topic::waitForMessage<std_msgs::UInt8>("/target_tracking_msg", nh);
+    // if(sharedTrackEnable != NULL){
+    //     trackerEnabled = *sharedTrackEnable;
+    // }
 
     if( trackerEnabled.data == (uint8_t) 1 )
     {
@@ -106,10 +117,10 @@ int main(int argc, char** argv)
   ROS_INFO("Starting the target tracking");
   while( ros::ok() )
   {
-    sharedTrackEnable = ros::topic::waitForMessage<std_msgs::UInt8>("/target_tracking_msg", nh);
-    if(sharedTrackEnable != NULL){
-        trackerEnabled = *sharedTrackEnable;
-    }
+    // sharedTrackEnable = ros::topic::waitForMessage<std_msgs::UInt8>("/target_tracking_msg", nh);
+    // if(sharedTrackEnable != NULL){
+    //     trackerEnabled = *sharedTrackEnable;
+    // }
 
     // ROS_INFO("Trak = %d", trackerEnabled.data);
 
