@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="dtu_controller" type="contact_controller_node" name="contact_controller_node" output="screen">
+    <param name="sim" value="true"/>
+  </node>
+</launch>

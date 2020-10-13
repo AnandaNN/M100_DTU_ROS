@@ -171,6 +171,7 @@ target_link_libraries(demo_joy_rpyrate_zvel
         )
 add_dependencies(demo_joy_rpyrate_zvel dji_sdk_generate_messages_cpp)
 
+
 add_executable(joy_roll_thrust_controller_node
         src/joy_roll_thrust_controller_node.cpp)
 
@@ -180,6 +181,15 @@ target_link_libraries(joy_roll_thrust_controller_node
         )
 add_dependencies(joy_roll_thrust_controller_node dji_sdk_generate_messages_cpp)
 
+
+add_executable(contact_controller_node
+        src/contact_controller_node.cpp)
+
+target_link_libraries(contact_controller_node
+        ${catkin_LIBRARIES}
+        ${DJIOSDK_LIBRARIES}
+        )
+add_dependencies(contact_controller_node dji_sdk_generate_messages_cpp)
 
 
 add_executable(xy_position_control_node
