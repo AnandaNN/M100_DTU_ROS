@@ -46,10 +46,10 @@ int main(int argc, char** argv)
   ros::Duration(0.01).sleep();
   controllerInterface.set_control_status( RUNNING );
 
-  ROS_INFO("Ready to give up control");
+  // ROS_INFO("Ready to give up control");
   std::cin >> input;
 
-  controllerInterface.set_reference( -4.0, 0, 1.0, 0.0 );
+  controllerInterface.set_reference( -2.5, 0, 1.0, 0.0 );
   std::cin >> input;
 
   // controllerInterface.set_reference( -3.0, 0, 1, 0.0 );
@@ -64,11 +64,11 @@ int main(int argc, char** argv)
   // std::cin >> input;
 
 
-  controllerInterface.set_reference( -2.0, 0.0, 1.0, 0.0 );
+  controllerInterface.set_reference( -2.0, 0.0, 1.0, 0.2 );
   std::cin >> input;
 
 
-  controllerInterface.set_reference( -4, 0, 1.0, 0.0 );
+  controllerInterface.set_reference( -3.0, 0, 1.0, 0.0 );
   std::cin >> input;
 
 
