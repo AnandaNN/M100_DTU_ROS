@@ -48,6 +48,8 @@ bool sim = false;
 uint8_t flight_status = 255;
 uint8_t display_mode  = 255;
 
+float targetPitch = 0;
+
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "contact_controller_node");
@@ -55,6 +57,7 @@ int main(int argc, char** argv)
   ros::NodeHandle pnh("~");
   
   pnh.getParam("sim", sim);
+  pnh.getParam("pitch", targetPitch);
 
   ros::Duration(5).sleep();
 
@@ -148,14 +151,14 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
 
   if ( !sim )
   {
-    rodValue = joy_msg.axes[4] < 0.5;
+    rodValue = joy_msg.axes[4] < -0.5;
   }
 
   if( rodValue )
   {
     controlValue.axes[0] = roll;
     controlValue.axes[1] = attitude.y;
-    controlValue.axes[2] = 0.02 * (5.0 - rad2deg * attitude.y);
+    controlValue.axes[2] = 0.02 * (targetPitch - rad2deg * attitude.y);
     controlValue.axes[3] = angular_velocity_world_frame.getZ();
   }
   else
