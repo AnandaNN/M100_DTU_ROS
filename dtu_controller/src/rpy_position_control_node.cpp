@@ -196,8 +196,8 @@ void controlCallback( const ros::TimerEvent& )
     controlValue.axes[0] = sin(currentPose.angular.z) * pitchCmd - cos(currentPose.angular.z) * rollCmd;
     controlValue.axes[1] = cos(currentPose.angular.z) * pitchCmd + sin(currentPose.angular.z) * rollCmd;
 
-    // controlValue.axes[0] = cos(currentPose.angular.z) * xCmd + sin(currentPose.angular.z) * yCmd;
-    // controlValue.axes[1] = -sin(currentPose.angular.z) * xCmd + cos(currentPose.angular.z) * yCmd;
+    // controlValue.axes[1] = cos(currentPose.angular.z) * pitchCmd + sin(currentPose.angular.z) * rollCmd;
+    // controlValue.axes[0] = -(-sin(currentPose.angular.z) * pitchCmd + cos(currentPose.angular.z) * rollCmd);
 
 
     controlValuePub.publish(controlValue);
