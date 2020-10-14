@@ -16,6 +16,7 @@
 #include <tf/tf.h>
 #include "sensor_msgs/Imu.h"
 #include "std_msgs/Bool.h"
+#include "tf/LinearMath/Vector3.h"
 
 const float deg2rad = C_PI/180.0;
 const float rad2deg = 180.0/C_PI;
@@ -39,6 +40,9 @@ sensor_msgs::Imu imuValue;
 bool rodValue = false;
 
 geometry_msgs::Vector3 attitude;
+float last_yaw = 0.0;
+tf::Vector3 angular_velocity_world_frame(0, 0, 0);
+bool sim = false;
 
 // global variables for subscribed topics
 uint8_t flight_status = 255;
@@ -50,7 +54,6 @@ int main(int argc, char** argv)
   ros::NodeHandle nh;
   ros::NodeHandle pnh("~");
   
-  bool sim = false;
   pnh.getParam("sim", sim);
 
   ros::Duration(5).sleep();
@@ -109,7 +112,10 @@ void imuCallback( const sensor_msgs::Imu imuMsg )
 
 void rodCallback(const std_msgs::Bool::ConstPtr& msg)
 {
-  rodValue = msg->data;
+  if( sim )
+  {
+    rodValue = msg->data;
+  }
 }
 
 void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
@@ -117,7 +123,8 @@ void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
   tf::Quaternion currentQuaternion(quaternion.quaternion.x, quaternion.quaternion.y, quaternion.quaternion.z, quaternion.quaternion.w);
   tf::Matrix3x3 R_FLU2ENU(currentQuaternion);
   R_FLU2ENU.getRPY(attitude.x, attitude.y, attitude.z);
-  
+  tf::Vector3 angular_velocity_body_frame(imuValue.angular_velocity.x, imuValue.angular_velocity.y, imuValue.angular_velocity.z);
+  angular_velocity_world_frame = R_FLU2ENU * angular_velocity_body_frame;
 }
 
 void controlCallback( const sensor_msgs::Joy joy_msg )
@@ -137,11 +144,28 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
   //int button = 
   // if( joy_msg.buttons[2] && motor_status == false ) arm_motors();
   // if( joy_msg.buttons[3] && motor_status == true ) disarm_motors();
+  //
 
-  controlValue.axes[0] = roll;
-  controlValue.axes[1] = pitch;
-  controlValue.axes[2] = z_vel;
-  controlValue.axes[3] = yaw;
+  if ( !sim )
+  {
+    rodValue = joy_msg.axes[4] < 0.5;
+  }
+
+  if( rodValue )
+  {
+    controlValue.axes[0] = roll;
+    controlValue.axes[1] = attitude.y;
+    controlValue.axes[2] = 0.02 * (5.0 - rad2deg * attitude.y);
+    controlValue.axes[3] = angular_velocity_world_frame.getZ();
+  }
+  else
+  {
+    controlValue.axes[0] = roll;
+    controlValue.axes[1] = pitch;
+    controlValue.axes[2] = z_vel;
+    controlValue.axes[3] = yaw;
+    last_yaw = attitude.z;
+  }
 
   //if( joy_msg.axes[4] < 0.5 )
   //{
@@ -154,7 +178,6 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
   // ctrlAttitudePub.publish(controlValue);
 
   ROS_INFO("Z: %f | Yaw: %f | Roll: %f | Pitch: %f | Rod: %i", z_vel, yaw, roll, pitch, rodValue);
-
 }
 
 void timerCallback( const ros::TimerEvent& )
