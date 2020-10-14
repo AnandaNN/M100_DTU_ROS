@@ -162,6 +162,8 @@ add_library( dtu_modules STATIC
         src/GuidanceOdometry.cpp
         )
 
+#######################
+
 add_executable(demo_joy_rpyrate_zvel
         src/demo_joy_rpyrate_zvel.cpp)
 
@@ -170,6 +172,8 @@ target_link_libraries(demo_joy_rpyrate_zvel
         ${DJIOSDK_LIBRARIES}
         )
 add_dependencies(demo_joy_rpyrate_zvel dji_sdk_generate_messages_cpp)
+
+#######################
 
 add_executable(joy_roll_thrust_controller_node
         src/joy_roll_thrust_controller_node.cpp)
@@ -180,7 +184,20 @@ target_link_libraries(joy_roll_thrust_controller_node
         )
 add_dependencies(joy_roll_thrust_controller_node dji_sdk_generate_messages_cpp)
 
+#######################
 
+add_executable(rpy_position_control_node
+        src/rpy_position_control_node.cpp
+        src/pid.cpp
+        src/PIDController.cpp)
+
+target_link_libraries(rpy_position_control_node
+        ${catkin_LIBRARIES}
+        ${DJIOSDK_LIBRARIES}
+        )
+add_dependencies(rpy_position_control_node dji_sdk_generate_messages_cpp)
+
+########################
 
 add_executable(xy_position_control_node
         src/xy_position_control_node.cpp
@@ -191,6 +208,8 @@ target_link_libraries(xy_position_control_node
         ${DJIOSDK_LIBRARIES}
         )
 add_dependencies(xy_position_control_node dji_sdk_generate_messages_cpp)
+
+#######################
 
 add_executable(position_observer_node
         src/position_observer_node.cpp)
