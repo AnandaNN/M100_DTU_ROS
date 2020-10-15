@@ -1,0 +1,45 @@
+<launch>
+
+    <arg name="simulation" default="false"/>
+    <arg name="positioning" default="3"/>
+
+    <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
+    <!-- node parameters -->
+    <param name="serial_name" type="string" value="/dev/ttyUSB0"/>
+    <param name="baud_rate" type="int" value="230400"/> 
+    <!-- <param name="app_id" type="int" value="1068445"/> -->
+    <param name="app_id" type="int" value="1082161"/>
+    <param name="app_version" type="int" value="1"/>
+    <param name="align_time" type="bool" value="false"/>
+    <param name="enc_key" type="string" value="aa7f4935a5c220dd2d7e1ca4f0fcc75d0b7e51b99aad7d44f74e7c468c639e8c"/>
+    <!-- <param name="enc_key" type="string" value="c8640f0878ec0ecc24150af05bee1d768a7bb58c2fce60a098783a0f121c550a"/> -->
+    <param name="use_broadcast" type="bool" value="false"/>
+    </node>
+
+    <node pkg="dtu_controller" type="joy_roll_thrust_controller_node" name="joy_control" output="screen"/>
+
+    <node pkg="joy" type="joy_node" name="joy_node" ns="dji_sdk" output="screen"/>
+
+    <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+
+    <include file="$(find dtu_controller)/launch/arducam.launch" />
+
+    <node pkg="LT_tracker_w_gui" type="LT_tracker.py" name="LT_tracker" output="screen" />
+
+    <group ns="dtu_controller">
+        <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
+            <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" />
+            <!-- <rosparam command="load" file="$(find dtu_controller)/parameters/simple_test.yaml" /> -->
+        </node>
+
+        <node pkg="dtu_controller" type="position_observer_node" name="position_observer" output="screen">
+            <rosparam command="load" file="$(find dtu_controller)/parameters/observer_params.yaml" />
+            <param name="simulation" type="bool" value="$(arg simulation)"/>
+            <param name="positioning" type="int" value="$(arg positioning)"/>
+        </node>
+
+        <include file="$(find dtu_controller)/launch/ransac_laser.launch" />
+
+    </group>
+
+</launch>
