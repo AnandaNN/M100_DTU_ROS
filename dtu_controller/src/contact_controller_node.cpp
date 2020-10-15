@@ -9,11 +9,13 @@
  *
  */
 
+#include <math.h>
+#include <tf/tf.h>
+
 #include "contact_controller_node.h"
 #include "dji_sdk/dji_sdk.h"
 #include "geometry_msgs/QuaternionStamped.h"
 #include "geometry_msgs/Vector3.h"
-#include <tf/tf.h>
 #include "sensor_msgs/Imu.h"
 #include "std_msgs/Bool.h"
 #include "tf/LinearMath/Vector3.h"
@@ -40,26 +42,28 @@ sensor_msgs::Imu imuValue;
 bool rodValue = false;
 
 geometry_msgs::Vector3 attitude;
-float last_yaw = 0.0;
-tf::Vector3 angular_velocity_world_frame(0, 0, 0);
+tf::Vector3 angularVelocityWorldFrame(0, 0, 0);
+tf::Vector3 contactPointBodyFrame(0.3995, 0, 0.0609);
 bool sim = false;
+float targetPitch = 0;
+float contactYaw = 0;
+float firstContactYaw = 0.0;
 
 // global variables for subscribed topics
 uint8_t flight_status = 255;
 uint8_t display_mode  = 255;
-
-float targetPitch = 0;
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "contact_controller_node");
   ros::NodeHandle nh;
   ros::NodeHandle pnh("~");
-  
-  pnh.getParam("sim", sim);
-  pnh.getParam("pitch", targetPitch);
 
-  ros::Duration(5).sleep();
+  pnh.getParam("sim", sim);
+  pnh.getParam("target_pitch", targetPitch);
+
+  if ( !sim )
+    ros::Duration(5).sleep();
 
   ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_rollpitch_yawrate_zvelocity", 1);
   // ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUposition_yaw", 0);
@@ -126,8 +130,10 @@ void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
   tf::Quaternion currentQuaternion(quaternion.quaternion.x, quaternion.quaternion.y, quaternion.quaternion.z, quaternion.quaternion.w);
   tf::Matrix3x3 R_FLU2ENU(currentQuaternion);
   R_FLU2ENU.getRPY(attitude.x, attitude.y, attitude.z);
-  tf::Vector3 angular_velocity_body_frame(imuValue.angular_velocity.x, imuValue.angular_velocity.y, imuValue.angular_velocity.z);
-  angular_velocity_world_frame = R_FLU2ENU * angular_velocity_body_frame;
+  tf::Vector3 angularVelocityBodyFrame(imuValue.angular_velocity.x, imuValue.angular_velocity.y, imuValue.angular_velocity.z);
+  angularVelocityWorldFrame = R_FLU2ENU * angularVelocityBodyFrame;
+  tf::Vector3 contactPointWorldFrame = R_FLU2ENU * contactPointBodyFrame;
+  contactYaw = atan2(contactPointWorldFrame.getY(), contactPointWorldFrame.getX());
 }
 
 void controlCallback( const sensor_msgs::Joy joy_msg )
@@ -156,10 +162,10 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
 
   if( rodValue )
   {
-    controlValue.axes[0] = roll;
+    controlValue.axes[0] = 10.0 * (firstContactYaw - contactYaw);
     controlValue.axes[1] = attitude.y;
     controlValue.axes[2] = 0.02 * (targetPitch - rad2deg * attitude.y);
-    controlValue.axes[3] = angular_velocity_world_frame.getZ();
+    controlValue.axes[3] = angularVelocityWorldFrame.getZ();
   }
   else
   {
@@ -167,7 +173,7 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
     controlValue.axes[1] = pitch;
     controlValue.axes[2] = z_vel;
     controlValue.axes[3] = yaw;
-    last_yaw = attitude.z;
+    firstContactYaw = contactYaw;
   }
 
   //if( joy_msg.axes[4] < 0.5 )
