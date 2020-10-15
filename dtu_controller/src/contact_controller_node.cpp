@@ -57,9 +57,12 @@ int main(int argc, char** argv)
   ros::NodeHandle pnh("~");
   
   pnh.getParam("sim", sim);
-  pnh.getParam("pitch", targetPitch);
+  pnh.getParam("target_pitch", targetPitch);
 
-  ros::Duration(5).sleep();
+  if( !sim )
+  {
+    ros::Duration(5).sleep();
+  }
 
   ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_rollpitch_yawrate_zvelocity", 1);
   // ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUposition_yaw", 0);
@@ -156,7 +159,7 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
 
   if( rodValue )
   {
-    controlValue.axes[0] = roll;
+    controlValue.axes[0] = 0.3 * (last_yaw - attitude.z) - 0.2 * angular_velocity_world_frame.getZ();
     controlValue.axes[1] = attitude.y;
     controlValue.axes[2] = 0.02 * (targetPitch - rad2deg * attitude.y);
     controlValue.axes[3] = angular_velocity_world_frame.getZ();
