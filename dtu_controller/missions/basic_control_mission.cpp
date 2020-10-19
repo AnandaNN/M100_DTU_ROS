@@ -47,10 +47,12 @@ int main(int argc, char** argv)
   ros::Duration(8).sleep();
 
   for(int i = 0; i < 3; i++){
-	  controllerInterface.set_reference( 1, 0, 1, 0.4 );
+    if( !ros::ok() ) break;
+	  controllerInterface.set_reference( 1, 0, 1, 0.0 );
 	  ros::Duration(10).sleep();
 
-	  controllerInterface.set_reference( 1.0, 1.0, 1, -0.4 );
+    if( !ros::ok() ) break;
+	  controllerInterface.set_reference( 1.0, 1.0, 1, 0.0 );
 	  ros::Duration(10).sleep();
   }
 
