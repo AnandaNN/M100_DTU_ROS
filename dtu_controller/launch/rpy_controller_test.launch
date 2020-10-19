@@ -1,7 +1,7 @@
 <launch>
 
-    <arg name="simulation" default="true"/>
-    <arg name="positioning" default="1"/>
+    <arg name="simulation" default="false"/>
+    <arg name="positioning" default="2"/>
 
     <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
         <!-- node parameters -->
@@ -14,7 +14,7 @@
         <param name="use_broadcast" type="bool" value="false"/>
     </node>
 
-    <!-- <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" /> -->
+    <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="rpy_position_control_node" name="rpy_position_controller" output="screen">
