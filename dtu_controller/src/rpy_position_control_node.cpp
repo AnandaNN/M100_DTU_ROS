@@ -17,6 +17,7 @@
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
+
 #include <dji_sdk/SDKControlAuthority.h>
 ros::ServiceClient sdk_ctrl_authority_service;
 
@@ -198,7 +199,7 @@ void controlCallback( const ros::TimerEvent& )
     tf2::Quaternion q_orig, q_rot, q_new;
     
     // double r=3.14159, p=0, y=0;  // Rotate the previous pose by 180* about X
-    q_rot.setRPY(currentPose.angular.x, currentPose.angular.y, currentPose.angular.z);
+    q_rot.setRPY(-currentPose.angular.x, -currentPose.angular.y, currentPose.angular.z);
     tf2::Matrix3x3 rot(q_rot);
     tf2::Vector3 cmdVal(pitchCmd, rollCmd, 0);
 
