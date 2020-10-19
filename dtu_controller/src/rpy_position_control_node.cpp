@@ -15,6 +15,8 @@
 #include "PIDController.h"
 #include "type_defines.h"
 
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 #include <dji_sdk/SDKControlAuthority.h>
 ros::ServiceClient sdk_ctrl_authority_service;
 
@@ -193,8 +195,24 @@ void controlCallback( const ros::TimerEvent& )
     controlValue.axes[2] = zVelPid->calculate(currentReference.linear.z, currentPose.linear.z);
     controlValue.axes[3] = yawRatePid->calculate(currentReference.angular.z, currentPose.angular.z) ;
 
-    controlValue.axes[0] = sin(currentPose.angular.z) * pitchCmd - cos(currentPose.angular.z) * rollCmd;
-    controlValue.axes[1] = cos(currentPose.angular.z) * pitchCmd + sin(currentPose.angular.z) * rollCmd;
+    tf2::Quaternion q_orig, q_rot, q_new;
+    
+    // double r=3.14159, p=0, y=0;  // Rotate the previous pose by 180* about X
+    q_rot.setRPY(currentPose.angular.x, currentPose.angular.y, currentPose.angular.z);
+    tf2::Matrix3x3 rot(q_rot);
+    tf2::Vector3 cmdVal(pitchCmd, rollCmd, 0);
+
+    // ROS_INFO("%.3f %.3f %.3f %.3f", q_rot.getX(), q_rot.getY(), q_rot.getZ(), q_rot.getW());
+
+    cmdVal = cmdVal*rot;
+
+    // ROS_INFO("%.3f %.3f | %.3f %.3f", pitchCmd, rollCmd, cmdVal[0], -cmdVal[1]);
+
+    controlValue.axes[0] = -cmdVal[1];
+    controlValue.axes[1] = cmdVal[0];
+
+    // controlValue.axes[0] = sin(currentPose.angular.z) * pitchCmd - cos(currentPose.angular.z) * rollCmd;
+    // controlValue.axes[1] = cos(currentPose.angular.z) * pitchCmd + sin(currentPose.angular.z) * rollCmd;
 
     // controlValue.axes[1] = cos(currentPose.angular.z) * pitchCmd + sin(currentPose.angular.z) * rollCmd;
     // controlValue.axes[0] = -(-sin(currentPose.angular.z) * pitchCmd + cos(currentPose.angular.z) * rollCmd);
