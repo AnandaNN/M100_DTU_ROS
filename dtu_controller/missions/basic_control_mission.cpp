@@ -43,13 +43,13 @@ int main(int argc, char** argv)
 
   controllerInterface.set_control_status( RUNNING );
 
-  controllerInterface.set_reference( 0, 0, 1, 0 );
-  ros::Duration(6).sleep();
+  controllerInterface.set_reference( 0, 0, 1, 0.0 );
+  ros::Duration(8).sleep();
 
   controllerInterface.set_reference( 1, 0, 1, 0.4 );
   ros::Duration(12).sleep();
 
-  controllerInterface.set_reference( 0.0, 0.0, 1, -0.3 );
+  controllerInterface.set_reference( 1.0, 1.0, 1, -0.4 );
   ros::Duration(16).sleep();
 
   controllerInterface.land_copter();
