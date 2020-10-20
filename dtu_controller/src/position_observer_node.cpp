@@ -321,8 +321,12 @@ void guidanceMotionCallback( const guidance::Motion motion )
 void localPositionCallback( const geometry_msgs::PointStamped localPoint )
 {
   
-  localPosition.x = localPoint.point.y;
-  localPosition.y = -localPoint.point.x;
+  // localPosition.x = localPoint.point.y;
+  // localPosition.y = -localPoint.point.x;
+
+  localPosition.x = localPoint.point.y * cos(yawOffset) - localPoint.point.x * sin(yawOffset);
+  localPosition.y = -localPoint.point.y * sin(yawOffset) - localPoint.point.x * cos(yawOffset);
+
   localPosition.z = localPoint.point.z;
 
   // tf::Matrix3x3 R_FLU2ENU(currentQuaternion);

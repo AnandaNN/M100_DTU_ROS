@@ -3,3 +3,14 @@ rostopic pub /dtu_controller/control_status std_msgs/UInt8 0
 rostopic pub /dtu_controller/current_frame_reference geometry_msgs/Twist '{linear:  {x: 1.0, y: 0.0, z: 0.0}, angular: {x: 0.0,y: 0.0,z: 0.0}}'
 
 rosservice call /dji_sdk/set_local_pos_ref
+
+
+#### rqt_plot commands ####
+
+rqt_plot /dtu_controller/current_frame_reference/linear /dtu_controller/current_frame_goal_reference/linear /dtu_controller/current_frame_pose/linear
+
+
+#### 
+
+rosbag record -a -o file_name -x "/usb_cam/image_raw|/camera/(.*)"
+rosbag record -a -O file_name.bag -x "/usb_cam/image_raw|/camera/(.*)"

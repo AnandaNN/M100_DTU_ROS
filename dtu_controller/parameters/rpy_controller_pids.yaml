@@ -1,0 +1,6 @@
+# PID controller gains and limits
+x_pid_params: {min: -0.4, max: 0.4, kp: 0.1, ki: 0.05, kd: 0.1}
+y_pid_params: {min: -0.4, max: 0.4, kp: 0.1, ki: 0.05, kd: 0.1}
+zvel_pid_params: {min: -2, max: 2, kp: 1.0, ki: 0.01, kd: 0.1}
+yawrate_pid_params: {min: -0.8, max: 0.8, kp: 1.5, ki: 0.05, kd: 0.1}
+loop_hz: 60.0
