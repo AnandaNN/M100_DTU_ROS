@@ -158,9 +158,9 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-#add_library( dtu_modules STATIC 
-        #src/GuidanceOdometry.cpp
-        #)
+add_library( dtu_modules STATIC 
+        src/GuidanceOdometry.cpp
+        )
 
 #######################
 
@@ -225,12 +225,12 @@ add_dependencies(xy_position_control_node dji_sdk_generate_messages_cpp)
 add_executable(position_observer_node
         src/position_observer_node.cpp)
 
-#target_link_libraries(position_observer_node
-        #dtu_modules
-        #${catkin_LIBRARIES}
-        #${DJIOSDK_LIBRARIES}
-        #)
-#add_dependencies(position_observer_node dji_sdk_generate_messages_cpp)
+target_link_libraries(position_observer_node
+        dtu_modules
+        ${catkin_LIBRARIES}
+        ${DJIOSDK_LIBRARIES}
+        )
+add_dependencies(position_observer_node dji_sdk_generate_messages_cpp)
 
 ########################################################################
 # Missions #
