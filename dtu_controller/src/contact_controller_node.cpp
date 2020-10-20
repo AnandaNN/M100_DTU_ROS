@@ -40,15 +40,15 @@ sensor_msgs::Imu imuValue;
 bool rodValue = false;
 
 geometry_msgs::Vector3 attitude;
-float last_yaw = 0.0;
-tf::Vector3 angular_velocity_world_frame(0, 0, 0);
+float lastYaw = 0.0;
+tf::Vector3 angularVelocityWorldFrame(0, 0, 0);
 bool sim = false;
+float targetPitch = 0;
+bool onlyFeedthrough = true;
 
 // global variables for subscribed topics
 uint8_t flight_status = 255;
 uint8_t display_mode  = 255;
-
-float targetPitch = 0;
 
 int main(int argc, char** argv)
 {
@@ -58,6 +58,7 @@ int main(int argc, char** argv)
   
   pnh.getParam("sim", sim);
   pnh.getParam("target_pitch", targetPitch);
+  pnh.getParam("only_feedthrough", onlyFeedthrough);
 
   if( !sim )
   {
@@ -129,8 +130,8 @@ void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
   tf::Quaternion currentQuaternion(quaternion.quaternion.x, quaternion.quaternion.y, quaternion.quaternion.z, quaternion.quaternion.w);
   tf::Matrix3x3 R_FLU2ENU(currentQuaternion);
   R_FLU2ENU.getRPY(attitude.x, attitude.y, attitude.z);
-  tf::Vector3 angular_velocity_body_frame(imuValue.angular_velocity.x, imuValue.angular_velocity.y, imuValue.angular_velocity.z);
-  angular_velocity_world_frame = R_FLU2ENU * angular_velocity_body_frame;
+  tf::Vector3 angularVelocityBodyFrame(imuValue.angular_velocity.x, imuValue.angular_velocity.y, imuValue.angular_velocity.z);
+  angularVelocityWorldFrame = R_FLU2ENU * angularVelocityBodyFrame;
 }
 
 void controlCallback( const sensor_msgs::Joy joy_msg )
@@ -159,10 +160,18 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
 
   if( rodValue )
   {
-    controlValue.axes[0] = 0.3 * (last_yaw - attitude.z) - 0.2 * angular_velocity_world_frame.getZ();
     controlValue.axes[1] = attitude.y;
-    controlValue.axes[2] = 0.02 * (targetPitch - rad2deg * attitude.y);
-    controlValue.axes[3] = angular_velocity_world_frame.getZ();
+    controlValue.axes[3] = angularVelocityWorldFrame.getZ();
+    if ( onlyFeedthrough )
+    {
+      controlValue.axes[0] = roll;
+      controlValue.axes[2] = z_vel;
+    }
+    else
+    {
+      controlValue.axes[0] = 0.3 * (lastYaw - attitude.z) - 0.2 * angularVelocityWorldFrame.getZ();
+      controlValue.axes[2] = 0.02 * (targetPitch - rad2deg * attitude.y);
+    }
   }
   else
   {
@@ -170,7 +179,7 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
     controlValue.axes[1] = pitch;
     controlValue.axes[2] = z_vel;
     controlValue.axes[3] = yaw;
-    last_yaw = attitude.z;
+    lastYaw = attitude.z;
   }
 
   //if( joy_msg.axes[4] < 0.5 )
