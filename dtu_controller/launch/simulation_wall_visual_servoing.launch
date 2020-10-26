@@ -18,7 +18,8 @@
 
     <!-- <include file="$(find dtu_controller)/launch/arducam.launch" /> -->
 
-    <node pkg="LT_tracker_w_gui" type="LT_tracker.py" name="LT_tracker" output="screen" />
+    <!-- <node pkg="LT_tracker_w_gui" type="LT_tracker.py" name="LT_tracker" output="screen" /> -->
+    <node pkg="LT_tracker_w_gui" type="CSRT_tracker.py" name="LT_tracker" output="screen" />
 
     <include file="$(find LT_tracker_w_gui)/launch/gui.launch" />
 
