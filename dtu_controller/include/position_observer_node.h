@@ -50,6 +50,8 @@ void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPositio
 void ultrasonicCallback( const sensor_msgs::LaserScan scan );
 void guidanceMotionCallback( const guidance::Motion motion );
 
+void visualOdometryCallback( const geometry_msgs::Point msg );
+
 void observerLoopCallback( const ros::TimerEvent& );
 void readParameters( ros::NodeHandle nh );
 
