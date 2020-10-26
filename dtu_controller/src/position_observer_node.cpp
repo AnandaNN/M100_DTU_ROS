@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 
   readParameters( nh );
 
-  if( !simulation ) odo.startOdometry( nh );
+  if( !simulation && positioning != VISUAL_ODOMETRY ) odo.startOdometry( nh );
 
   // Publisher for control values
   currentPosePub = nh.advertise<geometry_msgs::Twist>("/dtu_controller/current_frame_pose", 1);
@@ -110,7 +110,11 @@ int main(int argc, char** argv)
   ros::Duration(2).sleep();
 
   // Spin through the callback queue
-  for( int i = 0; i < 10; i++ ) ros::spinOnce();
+  for( int i = 0; i < 10; i++ )
+  {
+    // ROS_INFO("SPIN");
+    ros::spinOnce();
+  }
 
   // if( positioning == GPS ) ROS_INFO("Using GPS positioning for start!");
   // else if( positioning == GUIDANCE ) ROS_INFO("Using GUIDANCE for start!");
@@ -147,6 +151,15 @@ int main(int argc, char** argv)
     currentPose.linear.z = ultraHeight;
     currentPose.angular.z = wallPosition.angular.z;
   }
+  else
+  {
+    ROS_INFO("Observer running");
+    ROS_INFO("%f",wallPosition.linear.x);
+    currentPose.linear.x = wallPosition.linear.x;
+    currentPose.linear.y = 0;
+    currentPose.linear.z = 0;
+    currentPose.angular.z = 0;
+  }
 
   // Start the control loop timer
   
@@ -167,6 +180,7 @@ void readParameters( ros::NodeHandle nh )
 
 void visualOdometryCallback( const geometry_msgs::Point msg )
 {
+  // ROS_INFO("go");
   visualOdometryPose = msg;
 }
 

@@ -108,7 +108,7 @@ int main(int argc, char** argv)
       ros::Duration(3).sleep();
       break;
     }
-    // ros::Duration(0.05).sleep();
+    ros::Duration(0.01).sleep();
     ros::spinOnce();
   }
 
