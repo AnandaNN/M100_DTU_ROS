@@ -197,6 +197,17 @@ target_link_libraries(rpy_position_control_node
         )
 add_dependencies(rpy_position_control_node dji_sdk_generate_messages_cpp)
 
+#######################
+
+add_executable(contact_controller_node
+        src/contact_controller_node.cpp)
+
+target_link_libraries(contact_controller_node
+        ${catkin_LIBRARIES}
+        ${DJIOSDK_LIBRARIES}
+        )
+add_dependencies(contact_controller_node dji_sdk_generate_messages_cpp)
+
 ########################
 
 add_executable(xy_position_control_node

@@ -1,0 +1,25 @@
+<launch>
+
+    <arg name="simulation" default="true"/>
+    <arg name="positioning" default="4"/>
+
+    <!--<node pkg="image_transport" type="republish" name="decompress" args="compressed in:=usb_cam/image_raw out:=camera/image_decompressed" output="screen" />-->
+    <!--<node pkg="dtu_controller" type="LT_tracker.py" name="LT_tracker" output="screen" />-->
+    <!--<node pkg="dtu_controller" type="LT_gui_v2.py" name="LT_gui" output="screen" />-->
+
+    <group ns="dtu_controller">
+        <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
+            <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" />
+        </node>
+
+        <node pkg="dtu_controller" type="position_observer_node" name="position_observer" output="screen">
+            <rosparam command="load" file="$(find dtu_controller)/parameters/observer_params.yaml" />
+            <param name="simulation" type="bool" value="$(arg simulation)"/>
+            <param name="positioning" type="int" value="$(arg positioning)"/>
+        </node>
+
+        <!--<node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" />-->
+
+        <node pkg="dtu_controller" type="visual_tracking_test" name="visual_tracking_test" output="screen" />
+    </group>
+</launch>

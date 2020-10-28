@@ -12,8 +12,14 @@
     <param name="use_broadcast" type="bool" value="false"/>
     </node>
 
-    <node pkg="dtu_controller" type="joy_roll_thrust_controller_node" name="joy_control" output="screen"/>
+    <node pkg="dtu_controller" type="contact_controller_node" name="joy_control" output="screen">
+        <param name="sim" value="false"/>
+        <param name="target_pitch" value="7.0"/>
+        <param name="only_feedthrough" value="true"/>
+    </node>
+    <!-- <node pkg="dtu_controller" type="joy_roll_thrust_controller_node" name="joy_control" output="screen"/> -->
 
     <node pkg="joy" type="joy_node" name="joy_node" ns="dji_sdk" output="screen"/>
 
 </launch>
+
