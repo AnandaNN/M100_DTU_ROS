@@ -1,6 +1,11 @@
 <launch>
   <node pkg="dtu_controller" type="contact_controller_node" name="contact_controller_node" output="screen">
     <param name="sim" value="true"/>
+    <param name="only_feedthrough" value="false"/>
     <param name="target_pitch" value="10.0"/>
+    <param name="kp_yaw" value="0.3"/>
+    <param name="kd_yaw" value="0.2"/>
+    <param name="kp_pitch" value="0.02"/>
+    <param name="kd_pitch" value="0.0"/>
   </node>
 </launch>

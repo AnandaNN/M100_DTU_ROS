@@ -42,13 +42,19 @@ bool rodValue = false;
 geometry_msgs::Vector3 attitude;
 float lastYaw = 0.0;
 tf::Vector3 angularVelocityWorldFrame(0, 0, 0);
-bool sim = false;
-float targetPitch = 0;
-bool onlyFeedthrough = true;
 
 // global variables for subscribed topics
 uint8_t flight_status = 255;
 uint8_t display_mode  = 255;
+
+// variables for private parameters
+bool sim = false;
+bool onlyFeedthrough = true;
+float targetPitch = 0;
+float kpYaw = 0.3;
+float kdYaw = 0.2;
+float kpPitch = 0.02;
+float kdPitch = 0.0;
 
 int main(int argc, char** argv)
 {
@@ -57,8 +63,12 @@ int main(int argc, char** argv)
   ros::NodeHandle pnh("~");
   
   pnh.getParam("sim", sim);
-  pnh.getParam("target_pitch", targetPitch);
   pnh.getParam("only_feedthrough", onlyFeedthrough);
+  pnh.getParam("target_pitch", targetPitch);
+  pnh.getParam("kp_yaw", kpYaw);
+  pnh.getParam("kd_yaw", kdYaw);
+  pnh.getParam("kp_pitch", kpPitch);
+  pnh.getParam("kd_pitch", kdPitch);
 
   if( !sim )
   {
@@ -169,8 +179,8 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
     }
     else
     {
-      controlValue.axes[0] = 0.3 * (lastYaw - attitude.z) - 0.2 * angularVelocityWorldFrame.getZ();
-      controlValue.axes[2] = 0.02 * (targetPitch - rad2deg * attitude.y);
+      controlValue.axes[0] = kpYaw * (lastYaw - attitude.z) - kdYaw * angularVelocityWorldFrame.getZ();
+      controlValue.axes[2] = kpPitch * (targetPitch - rad2deg * attitude.y);
     }
   }
   else
