@@ -1,10 +1,10 @@
 <launch>
 
-    <arg name="simulation" default="false"/>
-    <arg name="positioning" default="2"/>
+    <arg name="simulation" default="true"/>
+    <arg name="positioning" default="1"/>
 
-    <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
-        <!-- node parameters -->
+    <!-- <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
+        <!- - node parameters - ->
         <param name="serial_name" type="string" value="/dev/ttyUSB0"/>
         <param name="baud_rate" type="int" value="230400"/>
         <param name="app_id" type="int" value="1082161"/>
@@ -12,9 +12,9 @@
         <param name="align_time" type="bool" value="false"/>
         <param name="enc_key" type="string" value="aa7f4935a5c220dd2d7e1ca4f0fcc75d0b7e51b99aad7d44f74e7c468c639e8c"/>
         <param name="use_broadcast" type="bool" value="false"/>
-    </node>
+    </node> -->
 
-    <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+    <!-- <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" /> -->
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="rpy_position_control_node" name="rpy_position_controller" output="screen">

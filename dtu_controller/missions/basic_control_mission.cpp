@@ -32,14 +32,14 @@ int main(int argc, char** argv)
   // Sleep until dji osdk has access
   ros::Duration(3).sleep();
 
-  set_local_frame(nh);
+  // set_local_frame(nh);
 
-  if( set_control_authority(nh, true) ) ROS_INFO("Got control authorithy");
-  else return 0;
+  // if( set_control_authority(nh, true) ) ROS_INFO("Got control authorithy");
+  // else return 0;
 
-  ros::Duration(2).sleep();
+  // ros::Duration(2).sleep();
 
-  arm_motors(nh, true);
+  // arm_motors(nh, true);
 
   controllerInterface.set_control_status( RUNNING );
 
