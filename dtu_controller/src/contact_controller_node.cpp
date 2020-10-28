@@ -150,34 +150,32 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
   int yaw_id = 3; // 0
   int roll_id = 0; // 3
   int pitch_id = 1; // 2
-  
+
   float z_vel = 2 * joy_msg.axes[thrust_id];
   float yaw = 100*deg2rad * joy_msg.axes[yaw_id];
   float roll = -25*deg2rad * joy_msg.axes[roll_id];
   float pitch = 25*deg2rad * joy_msg.axes[pitch_id];
-
-  // x = 0, o = 1, tri = 2, sq = 3
-
-  //int button = 
-  // if( joy_msg.buttons[2] && motor_status == false ) arm_motors();
-  // if( joy_msg.buttons[3] && motor_status == true ) disarm_motors();
-  //
 
   if ( !sim )
   {
     rodValue = joy_msg.axes[4] < -0.5;
   }
 
+  controlValue.axes[0] = roll;
+  controlValue.axes[1] = pitch;
+  controlValue.axes[2] = z_vel;
+  controlValue.axes[3] = yaw;
+
+  ROS_INFO("Z: %f | Yaw: %f | Roll: %f | Pitch: %f | Rod: %i", z_vel, yaw, roll, pitch, rodValue);
+}
+
+void timerCallback( const ros::TimerEvent& )
+{
   if( rodValue )
   {
     controlValue.axes[1] = attitude.y;
     controlValue.axes[3] = angularVelocityWorldFrame.getZ();
-    if ( onlyFeedthrough )
-    {
-      controlValue.axes[0] = roll;
-      controlValue.axes[2] = z_vel;
-    }
-    else
+    if ( !onlyFeedthrough )
     {
       controlValue.axes[0] = kpYaw * (lastYaw - attitude.z) - kdYaw * angularVelocityWorldFrame.getZ();
       controlValue.axes[2] = kpPitch * (targetPitch - rad2deg * attitude.y);
@@ -185,30 +183,11 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
   }
   else
   {
-    controlValue.axes[0] = roll;
-    controlValue.axes[1] = pitch;
-    controlValue.axes[2] = z_vel;
-    controlValue.axes[3] = yaw;
     lastYaw = attitude.z;
   }
 
-  //if( joy_msg.axes[4] < 0.5 )
-  //{
-    //controlValue.axes[0] = roll;
-    //controlValue.axes[1] = attitude.y;
-    //controlValue.axes[2] = z_vel;
-    //controlValue.axes[3] = imuValue.angular_velocity.z;
-  //}
-
-  // ctrlAttitudePub.publish(controlValue);
-
-  ROS_INFO("Z: %f | Yaw: %f | Roll: %f | Pitch: %f | Rod: %i", z_vel, yaw, roll, pitch, rodValue);
-}
-
-void timerCallback( const ros::TimerEvent& )
-{
   //if( motor_status )
-    ctrlAttitudePub.publish(controlValue);
+  ctrlAttitudePub.publish(controlValue);
 }
 
 // Helper Functions
