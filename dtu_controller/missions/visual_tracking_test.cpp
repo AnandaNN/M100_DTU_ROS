@@ -108,7 +108,7 @@ int main(int argc, char** argv)
       ros::Duration(3).sleep();
       break;
     }
-    // ros::Duration(0.05).sleep();
+    ros::Duration(0.01).sleep();
     ros::spinOnce();
   }
 
@@ -137,7 +137,8 @@ int main(int argc, char** argv)
     // ROS_INFO("%d %d", newError, oldError);
     if( newError > oldError )
     {
-      controllerInterface.set_reference(xTarget, currentPosition.linear.y - yError, currentPosition.linear.z - zError, 0);
+      // controllerInterface.set_reference(xTarget, currentPosition.linear.y - yError, currentPosition.linear.z - zError, 0);
+      controllerInterface.set_reference(xTarget, 0, 0, 0);
       // ROS_INFO("%f, %f, %f, %f",xTarget, currentPosition.linear.y - yError, currentPosition.linear.z - zError, 0.0);
       oldError = newError;
     }

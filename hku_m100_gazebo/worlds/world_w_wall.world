@@ -84,14 +84,14 @@
     <include>
       <name>wall</name>
       <uri>model://wall</uri>
-      <pose>10 3 5.6 0 0 0.4</pose>
+      <pose>5 0 5.6 0 0 0.0</pose>
     </include>
 
-    <include>
+    <!-- <include>
       <name>pillar</name>
       <uri>model://tall_pillar</uri>
       <pose>-7 -7 11.2 0 0 0.4</pose>
-    </include>
+    </include> -->
 
   </world>
 </sdf>

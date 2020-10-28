@@ -1,0 +1,31 @@
+<launch>
+
+    <arg name="simulation" default="true"/>
+    <arg name="positioning" default="4"/>
+
+    <!-- <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" /> -->
+
+    <!-- <include file="$(find dtu_controller)/launch/arducam.launch" /> -->
+
+    <node pkg="LT_tracker_w_gui" type="CSRT_tracker.py" name="LT_tracker" output="screen" />
+
+    <include file="$(find LT_tracker_w_gui)/launch/gui.launch" />
+
+    <group ns="dtu_controller">
+
+        <node pkg="dtu_controller" type="position_observer_node" name="position_observer" output="screen">
+            <rosparam command="load" file="$(find dtu_controller)/parameters/observer_params.yaml" />
+            <param name="simulation" type="bool" value="$(arg simulation)"/>
+            <param name="positioning" type="int" value="$(arg positioning)"/>
+        </node>
+
+        <!-- OLD NODE USE LAUNCH INSTEAD-->
+        <node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" />
+        <!-- <include file="$(find dtu_controller)/launch/ransac_laser.launch" /> -->
+
+    </group>
+
+    <node pkg="joy" type="joy_node" name="joy_node" output="screen"/>
+    <node pkg="hku_m100_gazebo" type="simple_joy.py" name="joy_2_dji" output="screen"/>
+
+</launch>

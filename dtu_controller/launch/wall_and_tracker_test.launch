@@ -14,7 +14,7 @@
         <param name="use_broadcast" type="bool" value="false"/>
     </node>
 
-    <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+    <!-- <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" /> -->
 
     <!-- launch video stream -->
     <!-- <include file="$(find video_stream_opencv)/launch/camera.launch" >
@@ -29,7 +29,7 @@
 
     <include file="$(find dtu_controller)/launch/arducam.launch" />
 
-    <node pkg="LT_tracker_w_gui" type="LT_tracker.py" name="LT_tracker" output="screen" />
+    <node pkg="LT_tracker_w_gui" type="CSRT_tracker.py" name="LT_tracker" output="screen" />
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">

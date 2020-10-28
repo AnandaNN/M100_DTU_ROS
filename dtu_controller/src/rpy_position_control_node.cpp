@@ -5,7 +5,7 @@
  *  @brief
  *  
  *
- *  @copyright 2020 Ananda Nielsen, DTU. All rights reserved.
+ *  @copyright 2020 Ananda Nielsen, DTU. All rights reserved
  *
  */
 

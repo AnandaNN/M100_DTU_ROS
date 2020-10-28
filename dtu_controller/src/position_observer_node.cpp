@@ -29,12 +29,16 @@ ros::Subscriber guidanceMotionSub;
 ros::Subscriber wallPositionSub;
 ros::Subscriber imuSub;
 
+ros::Subscriber visualOdometrySub;
+
 // Global sub/pub variables
 geometry_msgs::Twist currentPose;
 geometry_msgs::Twist currentReference;
 
 geometry_msgs::Twist guidanceLocalPose;
 geometry_msgs::Twist guidanceOffsetPose;
+
+geometry_msgs::Point visualOdometryPose;
 
 geometry_msgs::Vector3 attitude;
 geometry_msgs::Vector3 localPosition;
@@ -80,7 +84,7 @@ int main(int argc, char** argv)
 
   readParameters( nh );
 
-  if( !simulation ) odo.startOdometry( nh );
+  if( !simulation && positioning != VISUAL_ODOMETRY ) odo.startOdometry( nh );
 
   // Publisher for control values
   currentPosePub = nh.advertise<geometry_msgs::Twist>("/dtu_controller/current_frame_pose", 1);
@@ -99,11 +103,18 @@ int main(int argc, char** argv)
 
   // Laser scanner subscriber
   wallPositionSub = nh.subscribe<std_msgs::Float32MultiArray>("/dtu_controller/wall_position", 1, wallPositionCallback );
-  
+
+  // Visual Tracker subscriber
+  visualOdometrySub = nh.subscribe<geometry_msgs::Point>("/distance_error", 1, visualOdometryCallback);
+
   ros::Duration(2).sleep();
 
   // Spin through the callback queue
-  for( int i = 0; i < 10; i++ ) ros::spinOnce();
+  for( int i = 0; i < 10; i++ )
+  {
+    // ROS_INFO("SPIN");
+    ros::spinOnce();
+  }
 
   // if( positioning == GPS ) ROS_INFO("Using GPS positioning for start!");
   // else if( positioning == GUIDANCE ) ROS_INFO("Using GUIDANCE for start!");
@@ -140,6 +151,15 @@ int main(int argc, char** argv)
     currentPose.linear.z = ultraHeight;
     currentPose.angular.z = wallPosition.angular.z;
   }
+  else
+  {
+    ROS_INFO("Observer running");
+    ROS_INFO("%f",wallPosition.linear.x);
+    currentPose.linear.x = wallPosition.linear.x;
+    currentPose.linear.y = 0;
+    currentPose.linear.z = 0;
+    currentPose.angular.z = 0;
+  }
 
   // Start the control loop timer
   
@@ -156,6 +176,12 @@ void readParameters( ros::NodeHandle nh )
   nh.getParam("/dtu_controller/position_observer/loop_hz", loopFrequency);
   ROS_INFO("Observer frequency: %f", loopFrequency);
 
+}
+
+void visualOdometryCallback( const geometry_msgs::Point msg )
+{
+  // ROS_INFO("go");
+  visualOdometryPose = msg;
 }
 
 void imuCallback( const sensor_msgs::Imu raw_imu )
@@ -388,9 +414,23 @@ void observerLoopCallback( const ros::TimerEvent& )
       truePose.angular.y = attitude.y;
       truePose.angular.z = wallPosition.angular.z;
     }
+    else if ( positioning == VISUAL_ODOMETRY )
+    {
+      truePose.linear.x = wallPosition.linear.x;
+      truePose.linear.y = visualOdometryPose.y;
+      truePose.linear.z = visualOdometryPose.z;
 
-    if( simulation ) currentPose.linear.z = actualHeight;
-    else
+      truePose.angular.x = attitude.x;
+      truePose.angular.y = attitude.y;
+      truePose.angular.z = wallPosition.angular.z;
+
+      motionVelocity.setX(0); 
+      motionVelocity.setY(0); 
+      motionVelocity.setZ(0);
+    }
+
+    if( simulation && positioning != VISUAL_ODOMETRY ) currentPose.linear.z = actualHeight;
+    else if (positioning != VISUAL_ODOMETRY )
     {
       truePose.linear.z = ultraHeight;
     }
@@ -429,6 +469,7 @@ void observerLoopCallback( const ros::TimerEvent& )
       currentPose.linear.x = truePose.linear.x;
       currentPose.linear.y = truePose.linear.y;
       currentPose.angular.z = truePose.angular.z;
+      if( positioning == VISUAL_ODOMETRY ) currentPose.linear.z = truePose.linear.z;
     }
 
     currentPose.angular.x = truePose.angular.x;

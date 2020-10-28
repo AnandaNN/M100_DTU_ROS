@@ -1,7 +1,7 @@
 <launch>
 
     <arg name="simulation" default="false"/>
-    <arg name="positioning" default="3"/>
+    <arg name="positioning" default="5"/>
 
     <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
         <!-- node parameters -->
@@ -14,13 +14,13 @@
         <param name="use_broadcast" type="bool" value="false"/>
     </node>
 
-    <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+    <!-- <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" /> -->
 
     <include file="$(find dtu_controller)/launch/arducam.launch" />
 
-    <node pkg="LT_tracker_w_gui" type="LT_tracker.py" name="LT_tracker" output="screen" />
+    <node pkg="LT_tracker_w_gui" type="CSRT_tracker.py" name="LT_tracker" output="screen" />
 
-    <!-- <include file="$(find LT_tracker_w_gui)/launch/gui.launch" /> -->
+    <include file="$(find LT_tracker_w_gui)/launch/gui.launch" />
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
