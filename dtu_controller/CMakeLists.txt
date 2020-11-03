@@ -160,6 +160,7 @@ include_directories(
 
 add_library( dtu_modules STATIC 
         src/GuidanceOdometry.cpp
+        src/ContactController.cpp
         )
 
 #######################
@@ -207,6 +208,19 @@ target_link_libraries(contact_controller_node
         ${DJIOSDK_LIBRARIES}
         )
 add_dependencies(contact_controller_node dji_sdk_generate_messages_cpp)
+
+#######################
+
+add_executable(contactController_w_rod_test_node
+        src/contactController_w_rod_test_node.cpp
+        src/general_functions.cpp)
+
+target_link_libraries(contactController_w_rod_test_node
+        ${catkin_LIBRARIES}
+        ${DJIOSDK_LIBRARIES}
+        dtu_modules
+        )
+add_dependencies(contactController_w_rod_test_node dji_sdk_generate_messages_cpp)
 
 ########################
 
@@ -267,6 +281,17 @@ target_link_libraries(visual_tracking_test
         ${DJIOSDK_LIBRARIES}
         )
 #add_dependencies(switch_on_controller_test)
+
+# Autonomous wall touch mission
+add_executable(autonomous_wall_touch
+        missions/autonomous_wall_touch.cpp
+        src/general_functions.cpp)
+
+target_link_libraries(autonomous_wall_touch
+        dtu_modules
+        ${catkin_LIBRARIES}
+        ${DJIOSDK_LIBRARIES}
+        )
 
 #############
 ## Install ##

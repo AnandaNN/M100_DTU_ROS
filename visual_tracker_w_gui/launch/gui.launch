@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<node pkg="image_transport" type="republish" name="decompress" args="compressed in:=usb_cam/image_raw out:=camera/image_decompressed" output="screen" />
+    <node pkg="visual_tracker_w_gui" type="visual_gui_v2.py" name="visual_gui" output="screen" />
+
+</launch>

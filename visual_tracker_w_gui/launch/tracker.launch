@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<arg name="tracker" default="csrt"/>
+    <!-- launch video stream -->
+    <!--
+    <include file="$(find video_stream_opencv)/launch/camera.launch" >
+   		<!- node name and ros graph name ->
+	  	<arg name="camera_name" value="webcam" />
+        <arg name="fps" value="30" />
+	  	<!- setting frame_id and resolution ->
+	  	<arg name="frame_id" value="webcam_optical_frame" />
+   	    <arg name="width" value="1280"/>
+  	    <arg name="height" value="720"/>
+    </include> -->
+
+	<include file="$(find dtu_controller)/launch/arducam.launch" />
+
+    <node pkg="visual_tracker_w_gui" type="$(arg tracker)_tracker.py" name="$(arg tracker)_tracker" output="screen" />
+
+</launch>
