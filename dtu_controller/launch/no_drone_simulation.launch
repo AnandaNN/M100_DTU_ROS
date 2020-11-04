@@ -1,13 +1,13 @@
 <launch>
 
     <arg name="simulation" default="true"/>
-    <arg name="positioning" default="4"/>
+    <arg name="positioning" default="5"/>
 
     <!-- <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" /> -->
 
     <!-- <include file="$(find dtu_controller)/launch/arducam.launch" /> -->
 
-    <node pkg="LT_tracker_w_gui" type="CSRT_tracker.py" name="LT_tracker" output="screen" />
+    <node pkg="visual_tracker_w_gui" type="csrt_tracker.py" name="csrt_tracker" output="screen" />
 
     <include file="$(find LT_tracker_w_gui)/launch/gui.launch" />
 

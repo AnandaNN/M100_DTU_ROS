@@ -14,11 +14,17 @@
         <param name="use_broadcast" type="bool" value="false"/>
     </node>
 
-    <!-- <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" /> -->
+    <!-- Start guidance if needed -->
+    <group if="$(eval arg('positioning') == 2)">
+        <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+    </group>
+    <group if="$(eval arg('positioning') == 3)">
+        <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+    </group>
 
     <include file="$(find dtu_controller)/launch/arducam.launch" />
 
-    <node pkg="LT_tracker_w_gui" type="CSRT_tracker.py" name="LT_tracker" output="screen" />
+    <node pkg="visual_tracker_w_gui" type="csrt_tracker.py" name="csrt_tracker" output="screen" />
 
     <!-- <include file="$(find LT_tracker_w_gui)/launch/gui.launch" /> -->
 
@@ -34,10 +40,7 @@
             <param name="positioning" type="int" value="$(arg positioning)"/>
         </node>
 
-        <!-- OLD NODE USE LAUNCH INSTEAD-->
-        <!-- <node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" /> -->
         <include file="$(find dtu_controller)/launch/ransac_laser.launch" />
-
 
         <node pkg="dtu_controller" type="visual_tracking_test" name="visual_tracking_test" output="screen" />
 
