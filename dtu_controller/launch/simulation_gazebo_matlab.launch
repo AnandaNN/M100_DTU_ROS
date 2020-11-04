@@ -21,5 +21,6 @@
         <!--<node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" />-->
 
         <node pkg="dtu_controller" type="visual_tracking_test" name="visual_tracking_test" output="screen" />
+        <node pkg="dtu_controller" type="simulated_control_authority.py" name="simulated_control_authority" output="screen" />
     </group>
 </launch>
