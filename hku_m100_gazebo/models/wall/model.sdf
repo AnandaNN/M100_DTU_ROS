@@ -16,26 +16,6 @@
           </inertia>
           <pose frame=''>0 0 0 0 0 0</pose>
         </inertial>
-        <collision name='collision'>
-          <geometry>
-            <box>
-              <size>0.3 20 11.2</size>
-            </box>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
         <visual name='visual'>
           <geometry>
             <box>
