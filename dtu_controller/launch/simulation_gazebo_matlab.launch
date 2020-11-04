@@ -1,7 +1,7 @@
 <launch>
 
     <arg name="simulation" default="true"/>
-    <arg name="positioning" default="4"/>
+    <arg name="positioning" default="5"/>
 
     <!--<node pkg="image_transport" type="republish" name="decompress" args="compressed in:=usb_cam/image_raw out:=camera/image_decompressed" output="screen" />-->
     <!--<node pkg="dtu_controller" type="LT_tracker.py" name="LT_tracker" output="screen" />-->
