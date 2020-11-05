@@ -25,15 +25,19 @@
 class ContactController {
 
   public:
+
+    // Runtime functions
     void init( ros::NodeHandle nh );
-
     void startController() { _running = true; }
-    void stopController() { _running = false; }
+    void stopController() { _running = false; _disengage = false; }
+    void disengage() { _disengage = true; }
 
+    // Set values functions
     void setTarget( float target ) { _targetPitch = target; }
+    void setControllerGains( float kpPitch, float kdPitch, float kpYaw, float kdYaw );
 
+    // Checking functions
     bool checkStatus() { return _running; }
-
     bool checkRod() { return _rodValue; }
 
   private:
@@ -44,6 +48,7 @@ class ContactController {
     float _kpPitch = 0.04;
     float _kdPitch = 0;
     float _targetPitch = 7.0;
+    float _disengagePitch = -5.0;
 
     // Variables
     float _lastYaw = 0;
@@ -54,6 +59,7 @@ class ContactController {
     float _loopFrequency = 50.0;
 
     bool _running = false;
+    bool _disengage = false;
     int _contactBuffer = 0;
 
     tf::Vector3 _angularVelocityWorldFrame;
@@ -78,8 +84,6 @@ class ContactController {
     void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion );
     void rodCallback(const std_msgs::Bool::ConstPtr& msg);
     void imuCallback( const sensor_msgs::Imu imuMsg );
-
-    
 
 };
 

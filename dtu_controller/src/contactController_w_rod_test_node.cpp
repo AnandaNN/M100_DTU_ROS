@@ -68,20 +68,21 @@ int main(int argc, char** argv)
     {
       if( stopContact )
       {
-        contactController.stopController();
-        ROS_INFO("Force stop. Releasing control");
-        if( set_control_authority(nh, false) )
-        {
-          ROS_INFO("Control released");
-        }
-        else
-        {
-          ROS_INFO("Failed to get control");
-        }
-        contactRunning = contactController.checkStatus();
-        ROS_INFO("Program sleep 5s");
-        ros::Duration(5).sleep();
-        ROS_INFO("Ready to trye again");
+        // contactController.stopController();
+        contactController.disengage();
+        ROS_INFO("Force stop. Disengaging wall control");
+        // if( set_control_authority(nh, false) )
+        // {
+        //   ROS_INFO("Control released");
+        // }
+        // else
+        // {
+        //   ROS_INFO("Failed to get control");
+        // }
+        // contactRunning = contactController.checkStatus();
+        // ROS_INFO("Program sleep 5s");
+        // ros::Duration(5).sleep();
+        // ROS_INFO("Ready to try again");
       }
       else
       {

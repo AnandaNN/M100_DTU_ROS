@@ -174,7 +174,8 @@ int main(int argc, char** argv)
     if( (currentTime.sec - begin.sec) > 10 )
     {
       ROS_INFO("Contact kept for 10 seconds. Releasing!");
-      contactController.stopController();
+      contactController.disengage();
+      // contactController.stopController();
       break;
     }
 
