@@ -34,7 +34,7 @@ void rcCallback( const sensor_msgs::Joy msg)
 {
   // ROS_INFO("%f", msg.axes[1]);
   // if( contactRunning ) 
-  stopContact = (msg.axes[1] < -0.5) ? 1 : 0;
+  stopContact = (msg.axes[1] < -0.2) ? 1 : 0;
 }
 
 int main(int argc, char** argv)

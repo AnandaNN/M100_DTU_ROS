@@ -1,11 +1,13 @@
 <launch>
 
     <arg name="simulation" default="true"/>
-    <arg name="positioning" default="4"/>
+    <arg name="positioning" default="5"/>
 
     <!--<node pkg="image_transport" type="republish" name="decompress" args="compressed in:=usb_cam/image_raw out:=camera/image_decompressed" output="screen" />-->
     <!--<node pkg="dtu_controller" type="LT_tracker.py" name="LT_tracker" output="screen" />-->
     <!--<node pkg="dtu_controller" type="LT_gui_v2.py" name="LT_gui" output="screen" />-->
+
+    <node pkg="visual_tracker_w_gui" type="csrt_tracker.py" name="csrt_tracker" output="screen" />
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
@@ -18,8 +20,9 @@
             <param name="positioning" type="int" value="$(arg positioning)"/>
         </node>
 
-        <!--<node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" />-->
+        <node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" />
 
         <node pkg="dtu_controller" type="visual_tracking_test" name="visual_tracking_test" output="screen" />
+        <!-- <node pkg="dtu_controller" type="autonomous_wall_touch" name="auto_wall_touch" output="screen" /> -->
     </group>
 </launch>
