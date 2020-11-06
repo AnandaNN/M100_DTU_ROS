@@ -46,7 +46,8 @@ class ContactController {
     float _targetPitch = 7.0;
 
     // Variables
-    float _lastYaw = 0;
+    float _contactYaw = 0;
+    float _lastContactYaw = 0;
     float _currentPitch = 0;
     float _currentYawRate = 0;
     bool _rodValue = false;
@@ -57,6 +58,7 @@ class ContactController {
     int _contactBuffer = 0;
 
     tf::Vector3 _angularVelocityWorldFrame;
+    tf::Vector3 _contactPointBodyFrame;
 
     geometry_msgs::Vector3 _attitude;
 
