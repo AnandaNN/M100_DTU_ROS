@@ -68,6 +68,7 @@ void ContactController::init( ros::NodeHandle nh )
   _controlValue.axes.push_back(0);
 
   _angularVelocityWorldFrame = tf::Vector3( 0.0, 0.0, 0.0 );
+  _contactPointBodyFrame = tf::Vector3( 0.3995, 0, 0.0609 );
 
   _controlTimer = nh.createTimer(ros::Duration(1.0/_loopFrequency), &ContactController::controlTimerCallback, this);
 }
@@ -89,6 +90,8 @@ void ContactController::attitudeCallback( const geometry_msgs::QuaternionStamped
   R_FLU2ENU.getRPY(_attitude.x, _attitude.y, _attitude.z);
   tf::Vector3 angularVelocityBodyFrame(_imuValue.angular_velocity.x, _imuValue.angular_velocity.y, _imuValue.angular_velocity.z);
   _angularVelocityWorldFrame = R_FLU2ENU * angularVelocityBodyFrame;
+  tf::Vector3 contactPointWorldFrame = R_FLU2ENU * _contactPointBodyFrame;
+  _contactYaw = atan2(contactPointWorldFrame.getY(), contactPointWorldFrame.getX());
 }
 
 void ContactController::setControllerGains( float kpPitch, float kdPitch, float kpYaw, float kdYaw )
@@ -109,7 +112,7 @@ void ContactController::controlTimerCallback( const ros::TimerEvent& )
 
     _controlValue.axes[1] = _attitude.y;
     _controlValue.axes[3] = _angularVelocityWorldFrame.getZ();
-    _controlValue.axes[0] = _kpYaw * (_lastYaw - _attitude.z) - _kdYaw * _angularVelocityWorldFrame.getZ();
+    _controlValue.axes[0] = _kpYaw * (_lastContactYaw - _contactYaw) - _kdYaw * _angularVelocityWorldFrame.getZ();
     _controlValue.axes[2] = _kpPitch * (target - rad2deg * _attitude.y);
 
     _contactBuffer = 0;
@@ -117,7 +120,7 @@ void ContactController::controlTimerCallback( const ros::TimerEvent& )
   }
   else
   {
-    _lastYaw = _attitude.z;
+    _lastContactYaw = _contactYaw;
     _contactBuffer++;
    
     if( _contactBuffer > _loopFrequency && _running ) stopController();

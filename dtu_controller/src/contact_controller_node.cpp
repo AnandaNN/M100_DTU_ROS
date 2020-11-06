@@ -9,11 +9,13 @@
  *
  */
 
+#include <math.h>
+#include <tf/tf.h>
+
 #include "contact_controller_node.h"
 #include "dji_sdk/dji_sdk.h"
 #include "geometry_msgs/QuaternionStamped.h"
 #include "geometry_msgs/Vector3.h"
-#include <tf/tf.h>
 #include "sensor_msgs/Imu.h"
 #include "std_msgs/Bool.h"
 #include "tf/LinearMath/Vector3.h"
@@ -40,40 +42,28 @@ sensor_msgs::Imu imuValue;
 bool rodValue = false;
 
 geometry_msgs::Vector3 attitude;
-float lastYaw = 0.0;
 tf::Vector3 angularVelocityWorldFrame(0, 0, 0);
+tf::Vector3 contactPointBodyFrame(0.3995, 0, 0.0609);
+bool sim = false;
+float targetPitch = 0;
+float contactYaw = 0;
+float firstContactYaw = 0.0;
 
 // global variables for subscribed topics
 uint8_t flight_status = 255;
 uint8_t display_mode  = 255;
-
-// variables for private parameters
-bool sim = false;
-bool onlyFeedthrough = true;
-float targetPitch = 0;
-float kpYaw = 0.3;
-float kdYaw = 0.2;
-float kpPitch = 0.02;
-float kdPitch = 0.0;
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "contact_controller_node");
   ros::NodeHandle nh;
   ros::NodeHandle pnh("~");
-  
-  pnh.getParam("sim", sim);
-  pnh.getParam("only_feedthrough", onlyFeedthrough);
-  pnh.getParam("target_pitch", targetPitch);
-  pnh.getParam("kp_yaw", kpYaw);
-  pnh.getParam("kd_yaw", kdYaw);
-  pnh.getParam("kp_pitch", kpPitch);
-  pnh.getParam("kd_pitch", kdPitch);
 
-  if( !sim )
-  {
+  pnh.getParam("sim", sim);
+  pnh.getParam("target_pitch", targetPitch);
+
+  if ( !sim )
     ros::Duration(5).sleep();
-  }
 
   ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_rollpitch_yawrate_zvelocity", 1);
   // ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUposition_yaw", 0);
@@ -142,6 +132,8 @@ void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
   R_FLU2ENU.getRPY(attitude.x, attitude.y, attitude.z);
   tf::Vector3 angularVelocityBodyFrame(imuValue.angular_velocity.x, imuValue.angular_velocity.y, imuValue.angular_velocity.z);
   angularVelocityWorldFrame = R_FLU2ENU * angularVelocityBodyFrame;
+  tf::Vector3 contactPointWorldFrame = R_FLU2ENU * contactPointBodyFrame;
+  contactYaw = atan2(contactPointWorldFrame.getY(), contactPointWorldFrame.getX());
 }
 
 void controlCallback( const sensor_msgs::Joy joy_msg )
@@ -150,44 +142,57 @@ void controlCallback( const sensor_msgs::Joy joy_msg )
   int yaw_id = 3; // 0
   int roll_id = 0; // 3
   int pitch_id = 1; // 2
-
+  
   float z_vel = 2 * joy_msg.axes[thrust_id];
   float yaw = 100*deg2rad * joy_msg.axes[yaw_id];
   float roll = -25*deg2rad * joy_msg.axes[roll_id];
   float pitch = 25*deg2rad * joy_msg.axes[pitch_id];
+
+  // x = 0, o = 1, tri = 2, sq = 3
+
+  //int button = 
+  // if( joy_msg.buttons[2] && motor_status == false ) arm_motors();
+  // if( joy_msg.buttons[3] && motor_status == true ) disarm_motors();
+  //
 
   if ( !sim )
   {
     rodValue = joy_msg.axes[4] < -0.5;
   }
 
-  controlValue.axes[0] = roll;
-  controlValue.axes[1] = pitch;
-  controlValue.axes[2] = z_vel;
-  controlValue.axes[3] = yaw;
+  if( rodValue )
+  {
+    controlValue.axes[0] = 10.0 * (firstContactYaw - contactYaw);
+    controlValue.axes[1] = attitude.y;
+    controlValue.axes[2] = 0.02 * (targetPitch - rad2deg * attitude.y);
+    controlValue.axes[3] = angularVelocityWorldFrame.getZ();
+  }
+  else
+  {
+    controlValue.axes[0] = roll;
+    controlValue.axes[1] = pitch;
+    controlValue.axes[2] = z_vel;
+    controlValue.axes[3] = yaw;
+    firstContactYaw = contactYaw;
+  }
+
+  //if( joy_msg.axes[4] < 0.5 )
+  //{
+    //controlValue.axes[0] = roll;
+    //controlValue.axes[1] = attitude.y;
+    //controlValue.axes[2] = z_vel;
+    //controlValue.axes[3] = imuValue.angular_velocity.z;
+  //}
+
+  // ctrlAttitudePub.publish(controlValue);
 
   ROS_INFO("Z: %f | Yaw: %f | Roll: %f | Pitch: %f | Rod: %i", z_vel, yaw, roll, pitch, rodValue);
 }
 
 void timerCallback( const ros::TimerEvent& )
 {
-  if( rodValue )
-  {
-    controlValue.axes[1] = attitude.y;
-    controlValue.axes[3] = angularVelocityWorldFrame.getZ();
-    if ( !onlyFeedthrough )
-    {
-      controlValue.axes[0] = kpYaw * (lastYaw - attitude.z) - kdYaw * angularVelocityWorldFrame.getZ();
-      controlValue.axes[2] = kpPitch * (targetPitch - rad2deg * attitude.y);
-    }
-  }
-  else
-  {
-    lastYaw = attitude.z;
-  }
-
   //if( motor_status )
-  ctrlAttitudePub.publish(controlValue);
+    ctrlAttitudePub.publish(controlValue);
 }
 
 // Helper Functions
