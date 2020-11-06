@@ -7,7 +7,7 @@
 
   <!-- Start Gazebo with wg world running in (max) realtime -->
    <include file="$(find hku_m100_gazebo)/launch/start.launch">
-      <arg name="world" value="$(find hku_m100_gazebo)/worlds/world_w_wall_straight.world"/>
+      <arg name="world" value="$(find hku_m100_gazebo)/worlds/world_w_wall.world"/>
    </include>
 
   <!-- Spawn simulated quadrotor uav -->

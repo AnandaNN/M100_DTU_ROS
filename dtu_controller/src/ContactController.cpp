@@ -60,7 +60,7 @@ void ContactController::init( ros::NodeHandle nh )
 
   _attitudeQuaternionSub = nh.subscribe<geometry_msgs::QuaternionStamped>( "/dji_sdk/attitude", 1, &ContactController::attitudeCallback, this );
   _imuSub = nh.subscribe<sensor_msgs::Imu>( "/dji_sdk/imu", 1, &ContactController::imuCallback, this );
-  _rodSub = nh.subscribe<std_msgs::Bool>("/dji/rod", 1, &ContactController::rodCallback, this);
+  _rodSub = nh.subscribe<std_msgs::Bool>("/dji_sdk/rod", 1, &ContactController::rodCallback, this);
 
   _controlValue.axes.push_back(0);
   _controlValue.axes.push_back(0);
