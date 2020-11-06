@@ -11,47 +11,9 @@
 
 #include "ContactController.h"
 
-//#include "contact_controller_node.h"
-//#include "dji_sdk/dji_sdk.h"
-// #include "tf/LinearMath/Vector3.h"
-
 const float deg2rad = M_PI/180.0;
 const float rad2deg = 180.0/M_PI;
 
-// bool motor_status = false;
-
-// ros::ServiceClient set_local_pos_reference;
-// ros::ServiceClient sdk_ctrl_authority_service;
-// ros::ServiceClient drone_task_service;
-// ros::ServiceClient query_version_service;
-// ros::ServiceClient arm_control_service;
-
-// ros::Publisher ctrlAttitudePub;
-
-// ros::Subscriber attitudeQuaternionSub;
-// ros::Subscriber imuSub;
-// ros::Subscriber rodSub;
-
-// sensor_msgs::Joy controlValue;
-// sensor_msgs::Imu imuValue;
-// bool rodValue = false;
-
-// geometry_msgs::Vector3 attitude;
-// float lastYaw = 0.0;
-// tf::Vector3 angularVelocityWorldFrame(0, 0, 0);
-
-// // global variables for subscribed topics
-// uint8_t flight_status = 255;
-// uint8_t display_mode  = 255;
-
-// // variables for private parameters
-// bool sim = false;
-// bool onlyFeedthrough = true;
-// float targetPitch = 0;
-// float kpYaw = 0.3;
-// float kdYaw = 0.2;
-// float kpPitch = 0.02;
-// float kdPitch = 0.0;
 
 void ContactController::init( ros::NodeHandle nh )
 {
