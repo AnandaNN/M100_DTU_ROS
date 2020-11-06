@@ -29,7 +29,7 @@ class ContactController {
     // Runtime functions
     void init( ros::NodeHandle nh );
     void startController() { _running = true; }
-    void stopController() { _running = false; _disengage = false; }
+    void stopController() { _running = false; _disengage = false; ROS_INFO("Contact stopped!"); }
     void disengage() { _disengage = true; }
 
     // Set values functions
@@ -48,7 +48,7 @@ class ContactController {
     float _kpPitch = 0.04;
     float _kdPitch = 0;
     float _targetPitch = 7.0;
-    float _disengagePitch = -5.0;
+    float _disengagePitch = -4.0;
 
     // Variables
     float _lastYaw = 0;

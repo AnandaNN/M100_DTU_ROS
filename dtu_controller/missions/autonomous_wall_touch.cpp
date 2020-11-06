@@ -125,7 +125,7 @@ int main(int argc, char** argv)
   while( ros::ok()  && xTarget < -1.0)
   {
 
-    xTarget += 0.01;
+    xTarget =currentPosition.linear.x + 0.25;
     controllerInterface.set_reference(xTarget, 0, 0, 0);
 
     ros::Duration(0.01).sleep();
@@ -133,17 +133,19 @@ int main(int argc, char** argv)
   }
 
   ROS_INFO("Wall reached, preparing for contact!");
-  ros::Duration(3).sleep();
+  ros::Duration(4).sleep();
 
   bool approachStarted = false;
 
   ros::Time begin = ros::Time::now(); 
 
+  xTarget = -1.0;
+
   while( ros::ok() )
   {
     if( !contactController.checkRod() )
     {
-      xTarget -= 0.01;
+      xTarget += 0.005;
       controllerInterface.set_reference(xTarget, 0, 0, 0);
     }
 
