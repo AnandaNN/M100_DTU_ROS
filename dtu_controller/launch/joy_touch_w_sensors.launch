@@ -16,15 +16,21 @@
     <param name="use_broadcast" type="bool" value="false"/>
     </node>
 
+    <!-- Start guidance if needed -->
+    <group if="$(eval arg('positioning') == 2)">
+        <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+    </group>
+    <group if="$(eval arg('positioning') == 3)">
+        <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+    </group>
+
     <node pkg="dtu_controller" type="joy_roll_thrust_controller_node" name="joy_control" output="screen"/>
 
     <node pkg="joy" type="joy_node" name="joy_node" ns="dji_sdk" output="screen"/>
 
-    <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
-
     <include file="$(find dtu_controller)/launch/arducam.launch" />
 
-    <node pkg="LT_tracker_w_gui" type="LT_tracker.py" name="LT_tracker" output="screen" />
+    <node pkg="visual_tracker_w_gui" type="csrt_tracker.py" name="csrt_tracker" output="screen" />
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">

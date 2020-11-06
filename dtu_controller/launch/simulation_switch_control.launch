@@ -14,8 +14,6 @@
         <param name="use_broadcast" type="bool" value="false"/>
     </node>
 
-    <!-- <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" /> -->
-
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
             <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" />
@@ -28,11 +26,8 @@
             <param name="positioning" type="int" value="$(arg positioning)"/>
         </node>
 
-        <!-- OLD NODE USE LAUNCH INSTEAD-->
         <node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" />
         
-        <!-- <include file="$(find dtu_controller)/launch/ransac_laser.launch" /> -->
-
         <node pkg="dtu_controller" type="switch_on_controller_test" name="switch_on_controller_test" output="screen" />
 
     </group>

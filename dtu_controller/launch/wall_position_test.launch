@@ -14,8 +14,14 @@
         <param name="use_broadcast" type="bool" value="false"/>
     </node>
 
-    <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
-
+    <!-- Start guidance if needed -->
+    <group if="$(eval arg('positioning') == 2)">
+        <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+    </group>
+    <group if="$(eval arg('positioning') == 3)">
+        <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+    </group>
+    
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
             <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" />

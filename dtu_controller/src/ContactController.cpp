@@ -94,10 +94,18 @@ void ContactController::attitudeCallback( const geometry_msgs::QuaternionStamped
   _contactYaw = atan2(contactPointWorldFrame.getY(), contactPointWorldFrame.getX());
 }
 
+void ContactController::setControllerGains( float kpPitch, float kdPitch, float kpYaw, float kdYaw )
+{
+  _kpPitch = kpPitch;
+  _kdPitch = kdPitch;
+  _kpYaw = kdYaw;
+  _kdYaw = kdYaw;
+}
+
 void ContactController::controlTimerCallback( const ros::TimerEvent& )
 {
 
-  if( _rodValue )
+  if( _rodValue && !_disengage )
   {
     _controlValue.axes[1] = _attitude.y;
     _controlValue.axes[3] = _angularVelocityWorldFrame.getZ();
@@ -113,10 +121,12 @@ void ContactController::controlTimerCallback( const ros::TimerEvent& )
    
     if( _contactBuffer > _loopFrequency ) stopController();
 
-    _controlValue.axes[1] = _targetPitch * deg2rad;
-    _controlValue.axes[3] = 0;
+    if( _disengage ) _controlValue.axes[1] = _disengagePitch * deg2rad;
+    else _controlValue.axes[1] = _targetPitch * deg2rad;
+
     _controlValue.axes[0] = 0;
     _controlValue.axes[2] = 0;
+    _controlValue.axes[3] = 0;
 
   }
 
