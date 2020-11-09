@@ -70,6 +70,8 @@ bool gpsReady = false;
 bool laserReady = false;
 bool motionReady = false;
 
+int tfSequence = 0;
+
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "position_observer_node");
@@ -483,7 +485,10 @@ void observerLoopCallback( const ros::TimerEvent& )
     tf::Quaternion q;
     q.setRPY( currentPose.angular.x, currentPose.angular.y, currentPose.angular.z );
     transform.setRotation(q);
-    br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "drone"));
+
+    tf::StampedTransform cTF(transform, ros::Time::now(), "world", "drone");
+
+    br.sendTransform(cTF);
 
     currentPosePub.publish(currentPose); 
   }

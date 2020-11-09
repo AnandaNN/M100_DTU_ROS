@@ -24,7 +24,7 @@
 
     <include file="$(find dtu_controller)/launch/arducam.launch" />
 
-    <node pkg="csrt_tracker_w_gui" type="csrt_tracker.py" name="csrt_tracker" output="screen" />
+    <node pkg="visual_tracker_w_gui" type="csrt_tracker.py" name="csrt_tracker" output="screen" />
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
