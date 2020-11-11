@@ -1,0 +1,7 @@
+<launch>
+  <node pkg="joy" type="joy_node" name="joy_node" output="screen">
+    <remap from="joy" to="/dji_sdk/xbox_joy"/>
+  </node>
+  <node pkg="dtu_controller" type="simulated_control_authority.py" name="simulated_control_authority" output="screen" />
+  <node pkg="dtu_controller" type="contactController_w_rod_test_node" name="contactTest" output="screen" />
+</launch>
