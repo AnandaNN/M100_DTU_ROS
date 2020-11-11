@@ -22,18 +22,21 @@
 #include "std_msgs/Bool.h"
 #include "geometry_msgs/QuaternionStamped.h"
 
+const float deg2rad = M_PI/180.0;
+const float rad2deg = 180.0/M_PI;
+
 class ContactController {
 
   public:
 
     // Runtime functions
     void init( ros::NodeHandle nh );
-    void startController() { _running = true; }
-    void stopController() { _running = false; _disengage = false; ROS_INFO("Contact stopped!"); }
+    void startController() { _running = true; _lastContactAttitude = _contactAttitude; ROS_INFO("controller started"); }
+    void stopController() { _running = false; ROS_INFO("controller stopped"); }
     void disengage() { _disengage = true; }
 
     // Set values functions
-    void setTarget( float target ) { _targetPitch = target; }
+    void setTarget( float target ) { _targetPitchDegrees = target; }
     void setControllerGains( float kpPitch, float kdPitch, float kpYaw, float kdYaw );
 
     // Checking functions
@@ -43,17 +46,15 @@ class ContactController {
   private:
 
     // Control parameters
-    float _contactPitch = 0.0;
+    float _contactPitch = -15.0 * deg2rad;
     float _kpYaw = 0.3;
     float _kdYaw = 0.2;
     float _kpPitch = 0.04;
     float _kdPitch = 0;
-    float _targetPitch = 0.0;
+    float _targetPitchDegrees = 0.0;
     float _disengagePitch = -4.0;
 
     // Variables
-    float _contactYaw = 0;
-    float _lastContactYaw = 0;
     float _currentPitch = 0;
     float _currentYawRate = 0;
     bool _rodValue = false;
@@ -65,7 +66,8 @@ class ContactController {
     int _contactBuffer = 0;
 
     geometry_msgs::Vector3 _attitude;
-    geometry_msgs::Vector3 _contact_attitude;
+    geometry_msgs::Vector3 _contactAttitude;
+    geometry_msgs::Vector3 _lastContactAttitude;
     float _yawRate = 0;
     float _contactYawRate = 0;
 
@@ -80,7 +82,9 @@ class ContactController {
     
     // Publisher
     ros::Publisher _ctrlAttitudePub;
-
+    ros::Publisher _referencePub;
+    ros::Publisher _statePub;
+    ros::Publisher _commandPub;
 
     // Functions
     void controlTimerCallback( const ros::TimerEvent& );

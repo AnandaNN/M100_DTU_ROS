@@ -50,62 +50,39 @@ int main(int argc, char** argv)
 
   while( ros::ok() )
   {
-    if( !contactRunning && contactController.checkRod() && !stopContact )
+    if( !contactRunning )
     {
-      ROS_INFO("Contact detected. Taking over!");
-      if( set_control_authority(nh, true) )
+      if( contactController.checkRod() )
       {
-        ROS_INFO("Got control authorithy");
-        contactController.startController();
-        contactRunning = true;
-      }
-      else
-      {
-        ROS_INFO("Failed to get control");
+        ROS_INFO("Contact detected. Taking over!");
+        if( set_control_authority(nh, true) )
+        {
+          ROS_INFO("Got control authorithy");
+          contactController.startController();
+          contactRunning = true;
+        }
+        else
+          ROS_INFO("Failed to get control");
       }
     }
     else if( contactRunning )
     {
-      if( stopContact )
+      if( !contactController.checkRod() )
       {
-        // contactController.stopController();
-        contactController.disengage();
-        ROS_INFO("Force stop. Disengaging wall control");
-        // if( set_control_authority(nh, false) )
-        // {
-        //   ROS_INFO("Control released");
-        // }
-        // else
-        // {
-        //   ROS_INFO("Failed to get control");
-        // }
-        // contactRunning = contactController.checkStatus();
-        // ROS_INFO("Program sleep 5s");
-        // ros::Duration(5).sleep();
-        // ROS_INFO("Ready to try again");
-      }
-      else
-      {
-        contactRunning = contactController.checkStatus();
-        if( !contactRunning )
+        ROS_INFO("Lost contact. Releasing control");
+        if( set_control_authority(nh, false) )
         {
-          ROS_INFO("Lost contact. Releasing control");
-          if( set_control_authority(nh, false) )
-          {
-            ROS_INFO("Control released");
-          }
-          else
-          {
-            ROS_INFO("Failed to get control");
-          }
+          ROS_INFO("Control released");
+          contactController.stopController();
+          contactRunning = false;
         }
+        else
+          ROS_INFO("Failed to release control");
       }
-
     }
 
     ros::spinOnce();
     ros::Duration(0.01).sleep();
-    
   }
 
   return 0;
