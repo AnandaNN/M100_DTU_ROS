@@ -43,11 +43,12 @@ class ContactController {
   private:
 
     // Control parameters
+    float _contactPitch = 0.0;
     float _kpYaw = 0.3;
     float _kdYaw = 0.2;
     float _kpPitch = 0.04;
     float _kdPitch = 0;
-    float _targetPitch = 7.0;
+    float _targetPitch = 0.0;
     float _disengagePitch = -4.0;
 
     // Variables
@@ -63,10 +64,10 @@ class ContactController {
     bool _disengage = false;
     int _contactBuffer = 0;
 
-    tf::Vector3 _angularVelocityWorldFrame;
-    tf::Vector3 _contactPointBodyFrame;
-
     geometry_msgs::Vector3 _attitude;
+    geometry_msgs::Vector3 _contact_attitude;
+    float _yawRate = 0;
+    float _contactYawRate = 0;
 
     sensor_msgs::Joy _controlValue;
     sensor_msgs::Imu _imuValue;
@@ -86,6 +87,7 @@ class ContactController {
     void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion );
     void rodCallback(const std_msgs::Bool::ConstPtr& msg);
     void imuCallback( const sensor_msgs::Imu imuMsg );
+    float getYawRate(const geometry_msgs::Vector3 u, const tf::Vector3 w);
 
 };
 
