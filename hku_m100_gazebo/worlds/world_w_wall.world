@@ -84,7 +84,7 @@
     <include>
       <name>wall</name>
       <uri>model://wall</uri>
-      <pose>0 -5 5.6 0 0 1.57079632679</pose>
+      <pose>0 -3.15 5.6 0 0 1.57079632679</pose>
     </include>
 
     <!-- <include>

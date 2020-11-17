@@ -7,6 +7,7 @@ from math import sqrt, atan, tan, degrees, radians
 from std_msgs.msg import Float32MultiArray
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import QuaternionStamped
 import pandas as pd
 from skimage.measure import ransac, LineModelND
 
@@ -27,6 +28,9 @@ debug = False
 scan_pub = rospy.Publisher('ransac_scan', LaserScan, queue_size=1)
 
 laser = None
+roll = 0
+pitch = 0
+yaw = 0
 
 if debug:
     import matplotlib.pyplot as plt
@@ -42,6 +46,14 @@ def laserSubCallback(data):
     laser = data
     # print("Got scan")
 
+def attitudeCallback(data):
+    global roll, pitch
+    
+    attitude = tf.transformations.euler_from_quaternion([data.quaternion.x, data.quaternion.y, data.quaternion.z, data.quaternion.w])
+    roll = attitude[0]
+    pitch = attitude[1]
+    yaw = attitude[2]
+    
 
 
 # Makes laser scans, finds the biggest object and calculates
@@ -355,6 +367,8 @@ def wall_position(debug=False):
     global laser
     laserSub = rospy.Subscriber('scan', LaserScan, laserSubCallback)
 
+    attitideSub = rospy.Subscriber('/dji_sdk/attitude', QuaternionStamped, attitudeCallback)
+
     # Create the publisher
     pub = rospy.Publisher('wall_position', Float32MultiArray, queue_size=1)
     ang_pub = rospy.Publisher('ang_pub', PoseStamped, queue_size=1)
@@ -397,7 +411,7 @@ def wall_position(debug=False):
 
         est_pub.publish(est_msg)
 
-        # Ang msg
+        # # Ang msg
         ang_msg = PoseStamped()
         ang_msg.header.stamp = rospy.Time.now()
         ang_msg.header.frame_id = "hokuyo_link"
@@ -431,7 +445,7 @@ def wall_position(debug=False):
 
         wall_pub.publish(wall_msg)
 
-        # Pos msg
+        # # Pos msg
         pos_msg = PointStamped()
         pos_msg.header.stamp = rospy.Time.now()
         pos_msg.header.frame_id = "hokuyo_link"
@@ -440,6 +454,26 @@ def wall_position(debug=False):
         pos_msg.point.z = 0
 
         pos_pub.publish(pos_msg)
+
+        q = tf.transformations.quaternion_from_euler( roll, pitch, (angle)*3.14159/180.0)
+        # q = tf.transformations.quaternion_from_euler( 0, 0, (-angle)*3.14159/180.0)
+        rotM = tf.transformations.quaternion_matrix(q)
+
+        rotPose = np.matmul( rotM,  np.array([[y], [x], [0], [1]]) )
+        
+        # print( (rotPose[0]*0.001, rotPose[1]*0.001, np.sqrt((rotPose[0]*0.001)**2 + (rotPose[1]*0.001)**2)) )
+        print( (angle, yaw_est, angle + yaw_est) )
+
+        # q = tf.transformations.quaternion_from_euler( 0, 0, (-angle)*3.14159/180.0)
+        # q = tf.transformations.quaternion_from_euler(-roll, -pitch, yaw)
+        
+        br = tf.TransformBroadcaster()
+        br.sendTransform( (rotPose[0]*0.001, rotPose[1]*0.001, rotPose[2]*0.00), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "Wall", "hokuyo_link" )
+
+        q = tf.transformations.quaternion_from_euler( -roll, -pitch, (-angle)*3.14159/180.0)
+        br.sendTransform( (y*0.001, x*0.001, 0), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "Wall xy", "hokuyo_link" )
+        
+        br.sendTransform( (y_est*0.001, x_est*0.001, 0), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "Wall xy est", "hokuyo_link" )
 
         # If debug is active then update the client
         if debug:

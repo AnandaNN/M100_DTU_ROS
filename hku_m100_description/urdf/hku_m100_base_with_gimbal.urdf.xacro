@@ -9,14 +9,14 @@
  -->  
  <!-- Main quadrotor link -->
   <xacro:macro name="hku_m100_base_macro">
-    <link name="base_link">
+    <link name="drone"> <!-- base_link -->
       <inertial>
         <mass value="2.477" />
         <origin xyz="0 0 0" />
         <inertia ixx="0.01152" ixy="0.0" ixz="0.0" iyy="0.01152" iyz="0.0" izz="0.0218" />
       </inertial>
 
-      <visual>
+      <!-- <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <mesh filename="package://hku_m100_description/meshes/hku_m100/hku_m100.dae"/>
@@ -28,7 +28,7 @@
         <geometry>
           <mesh filename="package://hku_m100_description/meshes/hku_m100/hku_m100.stl"/>
         </geometry>
-      </collision>
+      </collision> -->
     </link>
 
     <!-- Sonar height sensor -->
@@ -81,14 +81,16 @@
 
 
     <joint name="laser_joint" type="fixed">
-      <origin xyz="0.1 0 0.125" rpy="0 0 0" />
-      <parent link="base_link" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <!-- <origin xyz="0.1 0 0.125" rpy="0 0 0" />  -->
+      <parent link="drone" />
       <child link="hokuyo_link" />
     </joint>
 
     <link name="hokuyo_link"> 
       <visual> 
-        <origin xyz="0 0 -0.03" rpy="0 0 0"/>
+        <!-- <origin xyz="0 0 -0.03" rpy="0 0 0"/> -->
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry> 
           <box size="0.065 0.065 0.07"/> 
         </geometry>
@@ -127,7 +129,7 @@
                stddev of 0.01m will put 99.7% of samples within 0.03m of the true
                reading. -->
           <mean>0.0</mean>
-          <stddev>0.01</stddev>
+          <stddev>0.001</stddev>
         </noise>
       </ray>
       <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_gpu_laser.so">
@@ -145,9 +147,9 @@
 <!-- ###################################################################################################### -->
 <!-- ###################################################################################################### -->
 
-   <joint name="camera_joint" type="floating">
+    <joint name="camera_joint" type="floating">
       <origin xyz="0.1 0 -0.04" rpy="0 0 0"/>
-      <parent link="base_link"/>
+      <parent link="drone"/>
       <child link="camera_link"/>
     </joint>
     
@@ -171,13 +173,13 @@
       </collision>
     </link>
     
-    <joint name="camera_optical_joint" type="floating">
+    <!-- <joint name="camera_optical_joint" type="floating">
       <origin xyz="0 0 0" rpy="${-M_PI/2} 0.0 ${-M_PI/2}" />
       <parent link="camera_link" />
       <child link="camera_optical_frame"/>
     </joint>
   
-    <link name="camera_optical_frame"/>
+    <link name="camera_optical_frame"/> -->
     
     <gazebo reference="camera_link">
       <sensor type="camera" name="camera_camera_sensor">
@@ -211,6 +213,7 @@
           <frameName>camera_optical_frame</frameName>
         </plugin>
       </sensor>
+
     </gazebo>
 
   </xacro:macro>

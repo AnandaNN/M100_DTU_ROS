@@ -14,6 +14,7 @@
 #include "type_defines.h"
 
 #include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
 
 // Publisher
 ros::Publisher currentPosePub;
@@ -164,7 +165,9 @@ int main(int argc, char** argv)
   }
 
   // Start the control loop timer
-  
+
+  currentPosePub.publish(currentPose); 
+
   ros::Timer loopTimer = nh.createTimer(ros::Duration(1.0/loopFrequency), observerLoopCallback);
 
   ros::spin();
@@ -221,6 +224,7 @@ void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
 
 void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPosition )
 {
+
   if( internalWallPosition.data[3] > 0.1 )
   {
     // ROS_INFO("WALL CALLBACK");
@@ -479,16 +483,17 @@ void observerLoopCallback( const ros::TimerEvent& )
     // currentPose.angular.z = truePose.angular.z;
     
 
-    static tf::TransformBroadcaster br;
-    tf::Transform transform;
-    transform.setOrigin( tf::Vector3(currentPose.linear.x, currentPose.linear.y, currentPose.linear.z) );
-    tf::Quaternion q;
-    q.setRPY( currentPose.angular.x, currentPose.angular.y, currentPose.angular.z );
-    transform.setRotation(q);
+    // static tf::TransformBroadcaster br;
+    // tf::Transform transform;
+    // transform.setOrigin( tf::Vector3(currentPose.linear.x, currentPose.linear.y, currentPose.linear.z) );
+    // tf::Quaternion q;
+    // q.setRPY( currentPose.angular.x, currentPose.angular.y, currentPose.angular.z );
+    // // transform.setRotation(q);
+    // transform.setRotation(currentQuaternion);
 
-    tf::StampedTransform cTF(transform, ros::Time::now(), "world", "drone");
+    // tf::StampedTransform cTF(transform, ros::Time::now(), "world", "drone");
 
-    br.sendTransform(cTF);
+    // br.sendTransform(cTF);
 
     currentPosePub.publish(currentPose); 
   }

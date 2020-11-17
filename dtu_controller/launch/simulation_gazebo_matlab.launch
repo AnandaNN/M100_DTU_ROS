@@ -22,7 +22,7 @@
 
         <node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" />
 
-        <node pkg="dtu_controller" type="visual_tracking_test" name="visual_tracking_test" output="screen" />
-        <!-- <node pkg="dtu_controller" type="autonomous_wall_touch" name="auto_wall_touch" output="screen" /> -->
+        <!-- <node pkg="dtu_controller" type="visual_tracking_test" name="visual_tracking_test" output="screen" /> -->
+        <node pkg="dtu_controller" type="autonomous_wall_touch" name="auto_wall_touch" output="screen" />
     </group>
 </launch>

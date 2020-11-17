@@ -17,7 +17,6 @@ const float rad2deg = 180.0/M_PI;
 
 void ContactController::init( ros::NodeHandle nh )
 {
-  
   _ctrlAttitudePub = nh.advertise<sensor_msgs::Joy>("/dji_sdk/flight_control_setpoint_rollpitch_yawrate_zvelocity", 1);
 
   _attitudeQuaternionSub = nh.subscribe<geometry_msgs::QuaternionStamped>( "/dji_sdk/attitude", 1, &ContactController::attitudeCallback, this );

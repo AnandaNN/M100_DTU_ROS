@@ -33,8 +33,8 @@ class Target_tracker():
         self.distance_error_pub = rospy.Publisher('/distance_error', Point, queue_size=1)
 
         # Subscriber
-        # self.image_sub = rospy.Subscriber("/camera/image_decompressed",Image,self.newFrameCallback)
-        self.image_sub = rospy.Subscriber("/usb_cam/image_raw",Image,self.newFrameCallback)
+        self.image_sub = rospy.Subscriber("/camera/image_decompressed",Image,self.newFrameCallback)
+        #self.image_sub = rospy.Subscriber("/usb_cam/image_raw",Image,self.newFrameCallback)
         self.gui_target_sub = rospy.Subscriber("/gui_target", Point, self.guiTragetCallback)
         self.distance_sub = rospy.Subscriber("/dtu_controller/current_frame_pose", Twist, self.positionCallback)
 
@@ -82,8 +82,22 @@ class Target_tracker():
                 self.new_target = (x+w/2, y+h/2)
                 self.box_size = (w, h)
                 self.no_change = 1
+
+                # Update the bounding box if it gets to large or small
+                if w > 120 or h > 120:
+                    # print("Box updated (too large)")
+                    self.tracker = cv2.TrackerCSRT_create()
+                    self.initBB = (int(self.new_target[0]-self.bbSize[0]), int(self.new_target[1]-self.bbSize[1]), self.bbSize[0]*2, self.bbSize[1]*2)
+                    self.tracker.init(self.frame, self.initBB)
+                elif w < 30 or h < 30:
+                    # print("Box updated (too small)")
+                    self.tracker = cv2.TrackerCSRT_create()
+                    self.initBB = (int(self.new_target[0]-self.bbSize[0]), int(self.new_target[1]-self.bbSize[1]), self.bbSize[0]*2, self.bbSize[1]*2)
+                    self.tracker.init(self.frame, self.initBB)
+                
             else:
                 self.no_change = 0
+
 
     # Convert target point to position errors
     def calculateError(self):
