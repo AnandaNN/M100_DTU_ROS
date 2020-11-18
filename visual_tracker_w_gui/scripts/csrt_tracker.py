@@ -33,8 +33,8 @@ class Target_tracker():
         self.distance_error_pub = rospy.Publisher('/distance_error', Point, queue_size=1)
 
         # Subscriber
-        self.image_sub = rospy.Subscriber("/camera/image_decompressed",Image,self.newFrameCallback)
-        #self.image_sub = rospy.Subscriber("/usb_cam/image_raw",Image,self.newFrameCallback)
+        # self.image_sub = rospy.Subscriber("/camera/image_decompressed",Image,self.newFrameCallback)
+        self.image_sub = rospy.Subscriber("/usb_cam/image_raw",Image,self.newFrameCallback)
         self.gui_target_sub = rospy.Subscriber("/gui_target", Point, self.guiTragetCallback)
         self.distance_sub = rospy.Subscriber("/dtu_controller/current_frame_pose", Twist, self.positionCallback)
 
