@@ -24,6 +24,7 @@ private:
     
     ros::Publisher cmdStatusPub;
     ros::Publisher referencePub;
+    ros::Publisher positioningPub;
     
     uint8_t controlStatus;
     geometry_msgs::Twist currentReference;
@@ -36,6 +37,7 @@ public:
     void land_copter();
 
     void getCurrentPosition( ros::NodeHandle nh, geometry_msgs::Twist * curretPose );
+    void switchPositioning( ros::NodeHandle nh, int positioning );
 
     void holdPosition( ros::NodeHandle nh );
 

@@ -31,6 +31,8 @@ ros::Subscriber imuSub;
 
 ros::Subscriber visualOdometrySub;
 
+ros::Subscriber positioningSub;
+
 // Global sub/pub variables
 geometry_msgs::Twist currentPose;
 geometry_msgs::Twist currentReference;
@@ -63,6 +65,7 @@ bool motionInitialized = false;
 bool yawInitialized = false;
 float yawOffset = 0;
 
+bool resetPositioning = true;
 int positioning = GPS;
 bool simulation = 0;
 
@@ -108,6 +111,9 @@ int main(int argc, char** argv)
 
   // Visual Tracker subscriber
   visualOdometrySub = nh.subscribe<geometry_msgs::Point>("/distance_error", 1, visualOdometryCallback);
+
+  // Positioning subscriber
+  positioningSub = nh.subscribe<std_msgs::UInt8>("/dtu_controller/positioning", 1, positioningCallback);
 
   ros::Duration(2).sleep();
 
@@ -170,6 +176,12 @@ int main(int argc, char** argv)
   ros::spin();
 
   return 0;
+}
+
+void positioningCallback( const std_msgs::UInt8 msg )
+{
+  positioning = msg.data;
+  resetPositioning = true;
 }
 
 void readParameters( ros::NodeHandle nh )
@@ -442,23 +454,35 @@ void observerLoopCallback( const ros::TimerEvent& )
     float weightYaw;
     float weight[3];
 
-    if( fabs(truePose.linear.x - currentPose.linear.x) > maxError ) valid = false;
-    else if( fabs(truePose.linear.y - currentPose.linear.y) > maxError ) valid = false;
-    else if( fabs(truePose.linear.z - currentPose.linear.z) > maxError ) valid = false;
-    else if( fabs(truePose.angular.z - currentPose.angular.z) > maxError ) valid = false;
+    if( !resetPositioning )
+    {
+      if( fabs(truePose.linear.x - currentPose.linear.x) > maxError ) valid = false;
+      else if( fabs(truePose.linear.y - currentPose.linear.y) > maxError ) valid = false;
+      else if( fabs(truePose.linear.z - currentPose.linear.z) > maxError ) valid = false;
+      else if( fabs(truePose.angular.z - currentPose.angular.z) > maxError ) valid = false;
 
-    if( valid ) {
-      weight[0] = 0.5;
-      weight[1] = 0.5;
-      weight[2] = 0.5;
-      weightYaw = 0.3;
+      if( valid ) {
+        weight[0] = 0.5;
+        weight[1] = 0.5;
+        weight[2] = 0.5;
+        weightYaw = 0.3;
+      }
+      else {
+        weight[0] = 1;
+        weight[1] = 1;
+        weight[2] = 1;
+        weightYaw = 1;
+      }
     }
-    else {
-      weight[0] = 1;
-      weight[1] = 1;
-      weight[2] = 1;
-      weightYaw = 1;
+    else
+    {
+      weight[0] = 0;
+      weight[1] = 0;
+      weight[2] = 0;
+      weightYaw = 0;
+      resetPositioning = false;
     }
+    
 
     if( !simulation ) {
       currentPose.linear.x = (currentPose.linear.x + motionVelocity.getX()*(1.0/loopFrequency) )*weight[0] + truePose.linear.x * (1 - weight[0]);
