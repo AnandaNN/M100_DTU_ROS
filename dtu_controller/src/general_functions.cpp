@@ -140,7 +140,7 @@ void ControllerInterface::land_copter()
   int n = 30;
   float step = (current + 0.35)/(float) n;
 
-  for( int i = 0; i < n; i++ )
+  for( int i = 0; i < (n+20); i++ )
   {
     currentReference.linear.z -= step;
     referencePub.publish(currentReference);

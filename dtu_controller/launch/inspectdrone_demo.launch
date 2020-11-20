@@ -1,6 +1,6 @@
 <launch>
 
-    <arg name="simulation" default="false"/>
+    <arg name="simulation" default="true"/>
     <arg name="positioning" default="1"/> <!-- Start with GPS -->
 
     <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">

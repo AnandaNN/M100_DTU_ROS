@@ -89,7 +89,7 @@ int main(int argc, char** argv)
 
   readParameters( nh );
 
-  if( !simulation && positioning != VISUAL_ODOMETRY ) odo.startOdometry( nh );
+  // if( !simulation && positioning != VISUAL_ODOMETRY ) odo.startOdometry( nh );
 
   // Publisher for control values
   currentPosePub = nh.advertise<geometry_msgs::Twist>("/dtu_controller/current_frame_pose", 1);
@@ -462,10 +462,10 @@ void observerLoopCallback( const ros::TimerEvent& )
       else if( fabs(truePose.angular.z - currentPose.angular.z) > maxError ) valid = false;
 
       if( valid ) {
-        weight[0] = 0.5;
-        weight[1] = 0.5;
-        weight[2] = 0.5;
-        weightYaw = 0.3;
+        weight[0] = 0.65;
+        weight[1] = 0.65;
+        weight[2] = 0.65;
+        weightYaw = 0.65;
       }
       else {
         weight[0] = 1;
