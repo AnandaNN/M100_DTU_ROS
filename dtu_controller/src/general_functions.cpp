@@ -2,6 +2,8 @@
 
 #include <std_msgs/UInt8.h>
 
+#include "type_defines.h"
+
 
 bool set_control_authority(ros::NodeHandle nh, bool cmd)
 {
@@ -62,6 +64,7 @@ bool set_local_frame(ros::NodeHandle nh)
 void ControllerInterface::init_interface( ros::NodeHandle nh )
 {
   cmdStatusPub = nh.advertise<std_msgs::UInt8> ("/dtu_controller/control_status",1);
+  positioningPub = nh.advertise<std_msgs::UInt8> ("/dtu_controller/positioning",1);
   referencePub = nh.advertise<geometry_msgs::Twist> ("/dtu_controller/current_frame_goal_reference",1);
 }
 
@@ -85,6 +88,19 @@ void ControllerInterface::holdPosition( ros::NodeHandle nh )
 
   referencePub.publish(currentReference);
 
+}
+
+void ControllerInterface::switchPositioning( ros::NodeHandle nh, int positioning )
+{
+  set_control_status(RESET_CONTROLLERS);
+  ros::Duration(0.05).sleep();
+  std_msgs::UInt8 msg;
+  msg.data = positioning;
+  positioningPub.publish(msg);
+  ros::Duration(0.05).sleep();
+  holdPosition( nh );
+  ros::Duration(0.03).sleep();
+  set_control_status(RUNNING);
 }
 
 void ControllerInterface::getCurrentPosition( ros::NodeHandle nh, geometry_msgs::Twist * currentPose )
@@ -124,7 +140,7 @@ void ControllerInterface::land_copter()
   int n = 30;
   float step = (current + 0.35)/(float) n;
 
-  for( int i = 0; i < n; i++ )
+  for( int i = 0; i < (n+20); i++ )
   {
     currentReference.linear.z -= step;
     referencePub.publish(currentReference);

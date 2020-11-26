@@ -52,6 +52,8 @@ void guidanceMotionCallback( const guidance::Motion motion );
 
 void visualOdometryCallback( const geometry_msgs::Point msg );
 
+void positioningCallback( const std_msgs::UInt8 msg );
+
 void observerLoopCallback( const ros::TimerEvent& );
 void readParameters( ros::NodeHandle nh );
 

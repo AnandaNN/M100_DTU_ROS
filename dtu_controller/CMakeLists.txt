@@ -293,6 +293,17 @@ target_link_libraries(autonomous_wall_touch
         ${DJIOSDK_LIBRARIES}
         )
 
+# Inspectdrone demo
+add_executable(inspectdrone_demo
+        missions/inspectdrone_demo.cpp
+        src/general_functions.cpp)
+
+target_link_libraries(inspectdrone_demo
+        dtu_modules
+        ${catkin_LIBRARIES}
+        ${DJIOSDK_LIBRARIES}
+        )
+
 #############
 ## Install ##
 #############
