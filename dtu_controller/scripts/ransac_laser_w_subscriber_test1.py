@@ -25,9 +25,9 @@ max_angle = 45
 # Set the script into debugging mode
 debug = False
 
-scan_pub = rospy.Publisher('ransac_scan', LaserScan, queue_size=1)
+# scan_pub = rospy.Publisher('ransac_scan', LaserScan, queue_size=1)
 
-rotated_scan_pub = rospy.Publisher('rotated_ransac_scan', LaserScan, queue_size=1)
+# rotated_scan_pub = rospy.Publisher('rotated_ransac_scan', LaserScan, queue_size=1)
 pc_rotated_scan_pub = rospy.Publisher('pc_rotated_ransac_scan', PointCloud, queue_size=1)
 
 laser = None
@@ -48,7 +48,6 @@ if debug:
     from PIL import Image, ImageTk
     import time
 
-    import Tkinter as tk
 
 def laserSubCallback(data):
     global laser
@@ -93,8 +92,8 @@ def main_laser(ax, canvas, debug=False):
 
     #attitude = tf.transformations.euler_from_quaternion([raw_quat.quaternion.x, raw_quat.quaternion.y, raw_quat.quaternion.z, raw_quat.quaternion.w], axes='sxyz')
     #q = tf.transformations.quaternion_from_euler( roll_r, pitch_r, yaw_r )
-    q = tf.transformations.quaternion_from_euler( -pitch_s, -roll_s, 0 )
-    Rrp = tf.transformations.quaternion_matrix( q )
+    q = tf.transformations.quaternion_from_euler( pitch_s, roll_s, 0 )
+    Rrp = tf.transformations.inverse_matrix( tf.transformations.quaternion_matrix( q ) )
     rotdata = np.array( np.matrix(Rrp[:3,:3]) * data.transpose() )
 
     data = np.stack([rotdata[0,:], rotdata[1,:]],1)
@@ -176,7 +175,7 @@ def main_laser(ax, canvas, debug=False):
         pointmsg = Point32()
         pointmsg.y = rotdata[0,i]*0.001
         pointmsg.x = rotdata[1,i]*0.001
-        pointmsg.z = rotdata[2,i]*0.001
+        pointmsg.z = rotdata[2,i]*0.000
         pc_msg.points.append(pointmsg)
         pc_msg.channels.append(channelMsg)
         
@@ -188,30 +187,9 @@ def main_laser(ax, canvas, debug=False):
         return 0, 0, 0, ax, canvas, 0, 0, 0, 0
 
 
-def wall_position(debug=False):
+def wall_position():
     # if debugging is active then create a tkinter client and display
     # the laser scan and calculations
-    if debug:
-        top = tk.Tk()
-        # Create label to show the image on
-        label = tk.Label(top)
-        label.pack()
-        # Create a figure to plot the results on
-        f = Figure(figsize=(5, 4), dpi=100)
-        # Create the plot
-        ax = f.add_subplot(111)
-        ax.plot([])
-        # Add the plot to the client
-        canvas = FigureCanvasTkAgg(f, master=top)
-        canvas.get_tk_widget().pack()
-        canvas.draw()
-    # If not debugging create a dummy ax and canvas
-    else:
-        ax = None
-        canvas = None
-
-    # Create the hokuyo laser object
-    # laser = HokuyoLX()
 
     global laser
     laserSub = rospy.Subscriber('scan', LaserScan, laserSubCallback)
@@ -220,99 +198,85 @@ def wall_position(debug=False):
 
     # Create the publisher
     pub = rospy.Publisher('wall_position', Float32MultiArray, queue_size=1)
-    ang_pub = rospy.Publisher('ang_pub', PoseStamped, queue_size=1)
-    wall_pub = rospy.Publisher('wall_pub', PoseStamped, queue_size=1)
-    pos_pub = rospy.Publisher('pos_pub', PointStamped, queue_size=1)
 
-    est_pub = rospy.Publisher('est_pub', PoseStamped, queue_size = 1)
     # Create the node
     rospy.init_node('wall', anonymous=True)
     # Set the rate. Not sure what this should be
     rate = rospy.Rate(40)
     # Keep the loop alive
+
+    br = tf.TransformBroadcaster()
+
+
     while not rospy.is_shutdown():
         # Obtain a laser measurement
         #x, y, angle, ax, canvas, x_est, y_est, yaw_est, valid = main_laser(laser, ax, canvas, debug)
-        if laser != None:
-            x, y, angle, ax, canvas, x_est, y_est, yaw_est, valid = main_laser(ax, canvas, debug)
-        else:
-            continue
+        
+        # if laser != None:
+        #     x, y, angle, ax, canvas, x_est, y_est, yaw_est, valid = main_laser(ax, canvas, debug)
+        # else:
+        #     continue
+
+        x = 1.0
+        y = 2.0
+        angle = 4.0
+        valid = True
+
+        q = tf.transformations.quaternion_from_euler( 0, 0, -angle*np.pi/180 )
+        br.sendTransform( (y*0.001, x*0.001, 0), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "Wall xy", "flat_hokuyo" )
+
+        Rrp1 = tf.transformations.quaternion_matrix(q)
+        Rrp1[0:2,3] = [y*0.001, x*0.001]
+        #print(Rrp1)
+
+        #print(np.sqrt(y**2 + x**2), angle, angle*np.pi/180.0)
+        #0.1 0 0.125
+
+        q = tf.transformations.quaternion_from_euler( roll_s, pitch_s, 0 )
+        Rrp = tf.transformations.quaternion_matrix( q )
+
+        fquats = tf.transformations.quaternion_from_matrix( tf.transformations.inverse_matrix(Rrp) )
+
+        br.sendTransform( (0, 0, 0), (fquats[0], fquats[1], fquats[2], fquats[3]), rospy.Time.now(), "flat_hokuyo", "hokuyo_link" )
+
+        Rrp = tf.transformations.inverse_matrix( Rrp )
+
+        Rrp[0:3,3] = [0.1, 0, 0.125]
+
+        #print(Rrp1)
+        #print(Rrp)
+        #tf.transformations.inverse_matrix(
+        m1 = np.matrix(  Rrp  )
+        m2 = np.matrix(  Rrp1 )
+
+        #print( np.linalg.inv(m1) )
+        #print( m1 )
+
+        #th = np.matrix( [[1,0,0,0.1], [0,1,0,0], [0,0,1,0.125],[0,0,0,1]] )
+
+        print( (np.linalg.inv( m2 ) * np.linalg.inv(m1) )[0,3] )
+
+        #print(m2[0,3])
+        #print(np.linalg.inv(m2)[0,3])
+
+        #q = tf.transformations.quaternion_from_euler( roll_s, pitch_s, yaw_s )
+        #br.sendTransform( (0, 0, 0.5), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "drone", "World" )
+
+        #q = tf.transformations.quaternion_from_euler( 0, 0, yaw_s )
+        #br.sendTransform( (0, 0, 0.5), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "flat_drone", "World" )
+
+        # Keep the rate of the loop
+
         # Convert it to the ros array
         msg = Float32MultiArray()
-        msg.data = [x, y, (angle), valid]
+        msg.data = [x, y, (angle), valid, (np.linalg.inv( m2 ) * np.linalg.inv(m1) )[0,3]]
         # Publish the data
         pub.publish(msg)
 
-        #q = tf.transformations.quaternion_from_euler( roll_s, pitch_s, (0)*3.14159/180.0)
-        #q1 = q.copy()
-        # q = tf.transformations.quaternion_from_euler( 0, 0, (-angle)*3.14159/180.0)
-        #rotM = tf.transformations.quaternion_matrix(q)
-
-        #rotPose = np.matmul( rotM,  np.array([[y], [x], [0], [1]]) )
-        
-        # print( (rotPose[0]*0.001, rotPose[1]*0.001, np.sqrt((rotPose[0]*0.001)**2 + (rotPose[1]*0.001)**2)) )
-        # print( (angle, yaw_est, angle + yaw_est) )
-        
-
-        # q = tf.transformations.quaternion_from_euler( 0, 0, (-angle)*3.14159/180.0)
-        # q = tf.transformations.quaternion_from_euler(-roll, -pitch, yaw)
-        
-        br = tf.TransformBroadcaster()
-        # br.sendTransform( (rotPose[0]*0.001, rotPose[1]*0.001, rotPose[2]*0.00), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "Wall", "hokuyo_link" )
-
-        #q = tf.transformations.quaternion_from_euler( 0, 0, 0 )
-        # q = tf.transformations.quaternion_from_euler( -roll, -pitch, (-angle)*3.14159/180.0)
-        
-        q = tf.transformations.quaternion_from_euler( 0, 0, 0 )
-        br.sendTransform( (y*0.001, x*0.001, 0), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "Wall xy", "hokuyo_link" )
-        
-        br.sendTransform( (y_est*0.001, x_est*0.001, 0), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "Wall xy est", "hokuyo_link" )
-
-        q = tf.transformations.quaternion_from_euler( -roll_s, -pitch_s, 0)
-        att = tf.transformations.euler_from_quaternion([q[0], q[1], q[2], q[3]], axes='rxyz')
-
-        #rr = att[0]
-        #rp = att[1]
-
-        flat_dist = np.sqrt(y**2 + x**2) * 0.001
-        flat_rot = angle - att[2]*180.0/np.pi
-
-        #q = tf.transformations.quaternion_from_euler( -roll_s, -pitch_s, -yaw_s)
-        #att = tf.transformations.euler_from_quaternion([q[0], q[1], q[2], q[3]], axes='sxyz')
-
-        #ry = att[2]
-
-        #print(q1, q2)
-        
-        #print(att)
-        print( ( flat_dist, flat_rot, yaw_s*180/np.pi ) )
-        
-
-        #q = tf.transformations.quaternion_from_euler( -roll, -pitch, -flat_rot*np.pi/180.0 )
-        #q = tf.transformations.quaternion_from_euler( -roll_s, -pitch_s, 0 )
-        #q = tf.transformations.quaternion_from_euler( rr, rp, -angle*np.pi/180*0 )
-        #q2 = q.copy()
-        #br.sendTransform( (0, 0, 0), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "flat_hokuyo", "hokuyo_link" )
-        #br.sendTransform( (flat_dist, 0, 0), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "flat_wall", "flat_hokuyo" )
-
-        # q = tf.transformations.quaternion_from_euler( 0, 0, 0 )
-        #br.sendTransform( (flat_dist, 0, 0), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "flat_wall", "hokuyo_link" )
-        
-        #print(roll_r, pitch_r, yaw_r)
-        #print(roll_s, pitch_s, yaw_s)
-
-        #q = tf.transformations.quaternion_from_euler( -roll_r, -pitch_r, -yaw_r )
-        q = tf.transformations.quaternion_from_euler( -roll_s, -pitch_s, 0 )
-        br.sendTransform( (0, 0, 0), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "flat_hokuyo", "hokuyo_link" )
-
-        q = tf.transformations.quaternion_from_euler( roll_s, pitch_s, yaw_s )
-        br.sendTransform( (0, 0, 0.5), (q[0], q[1], q[2], q[3]), rospy.Time.now(), "drone", "World" )
-
-        # Keep the rate of the loop
         rate.sleep()
 
 if __name__ == '__main__':
     try:
-        wall_position(debug)
+        wall_position()
     except rospy.ROSInterruptException:
         pass

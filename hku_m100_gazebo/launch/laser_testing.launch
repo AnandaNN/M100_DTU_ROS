@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<launch>
+   
+  <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find hku_m100_gazebo)/models"/>
+  <!-- <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find hku_m100_gazebo)/models"/> -->
+
+  <!-- Start Gazebo with wg world running in (max) realtime -->
+   <include file="$(find hku_m100_gazebo)/launch/start.launch">
+      <arg name="world" value="$(find hku_m100_gazebo)/worlds/world_w_wall.world"/>
+   </include>
+
+  <!-- Spawn simulated quadrotor uav -->
+  <include file="$(find hku_m100_gazebo)/launch/spawn_hku_m100.launch" >
+    <arg name="model" value="$(find hku_m100_description)/urdf/solo_hokuyo.urdf.xacro"/> 
+    <arg name="x" value="0.0" />
+    <arg name="y" value="0.0" />
+    <arg name="z" value="0.3" />
+  </include>
+  
+  <!-- <node name="hku_m100_pcsim_gazebo_bridge" pkg="hku_m100_gazebo" type="hku_m100_pcsim_gazebo_bridge" respawn="true" /> -->
+  <!-- Start rviz visualization with preset config -->
+  
+  <node pkg="joy" type="joy_node" name="joy_node" output="screen" />
+  <node pkg="hku_m100_gazebo" type="simple_joy.py" name="simple_joy" output="screen" />
+
+</launch>

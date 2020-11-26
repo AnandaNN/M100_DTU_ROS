@@ -39,7 +39,7 @@ def joyCallback(data):
     if data.axes[0] > -0.09 and data.axes[0] < 0.09:
         joyData.angular.z = 0
     else:
-        joyData.angular.z = data.axes[0]
+        joyData.angular.z = data.axes[0]/3.0
 
 def posePubCallback(time):
     global joyData, point, quaternion, yaw
@@ -72,7 +72,7 @@ def start():
     pointPub = rospy.Publisher("/dji_sdk/local_position", PointStamped, queue_size=1)
     attitudePub = rospy.Publisher("/dji_sdk/attitude", QuaternionStamped, queue_size=1)
 
-    rospy.Timer(rospy.Duration(1.0/30.0), posePubCallback)
+    rospy.Timer(rospy.Duration(1.0/60.0), posePubCallback)
 
     rospy.spin()
 

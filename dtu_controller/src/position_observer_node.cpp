@@ -164,11 +164,19 @@ int main(int argc, char** argv)
     currentPose.angular.z = 0;
   }
 
+  visualOdometryPose.x = 0;
+  visualOdometryPose.y = 0;
+  visualOdometryPose.z = 0; 
+
   // Start the control loop timer
 
   currentPosePub.publish(currentPose); 
 
+  ROS_INFO("loopCallback starting");
+
   ros::Timer loopTimer = nh.createTimer(ros::Duration(1.0/loopFrequency), observerLoopCallback);
+
+  ROS_INFO("Observer start spinning");
 
   ros::spin();
 
@@ -178,7 +186,8 @@ int main(int argc, char** argv)
 void readParameters( ros::NodeHandle nh )
 {
   // Read parameter file
-  nh.getParam("/dtu_controller/position_observer/loop_hz", loopFrequency);
+  if( !nh.getParam("/dtu_controller/position_observer/loop_hz", loopFrequency) ) loopFrequency = 60.0;
+  
   ROS_INFO("Observer frequency: %f", loopFrequency);
 
 }
@@ -232,7 +241,8 @@ void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPositio
     float y = 0.001 * internalWallPosition.data[0];
     float x = -0.001 * internalWallPosition.data[1];
     float ang = tf2Radians(internalWallPosition.data[2]);
-    wallPosition.linear.x = -sqrt( x*x + y*y ) * cos(attitude.y);
+    //wallPosition.linear.x = -sqrt( x*x + y*y ) * cos(attitude.y);
+    wallPosition.linear.x = internalWallPosition.data[4];
     wallPosition.linear.y = 0;
     wallPosition.linear.z = 0;
 
@@ -243,24 +253,24 @@ void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPositio
     if( positioning == WALL_POSITION )
     {
 
-    float rot = wallPosition.angular.z - guidanceLocalPose.angular.z;
+      float rot = wallPosition.angular.z - guidanceLocalPose.angular.z;
 
-    // ROS_INFO("wall = %f | global = %f | rot = %f", wallPosition.angular.z*180/3.14159, guidanceLocalPose.angular.z*180/3.14159, rot * 180/3.14159 );
+      // ROS_INFO("wall = %f | global = %f | rot = %f", wallPosition.angular.z*180/3.14159, guidanceLocalPose.angular.z*180/3.14159, rot * 180/3.14159 );
 
-    wallPosition.linear.y = guidanceLocalPose.linear.x * sin( rot ) 
-                              + guidanceLocalPose.linear.y * cos( rot );
-      
+      wallPosition.linear.y = guidanceLocalPose.linear.x * sin( rot ) 
+                                + guidanceLocalPose.linear.y * cos( rot );
+        
     }
     else if( positioning == WALL_WITH_GPS_Y)
     {
 
-    float rot = wallPosition.angular.z - attitude.z;
+      float rot = wallPosition.angular.z - attitude.z;
 
-    // ROS_INFO("wall = %f | global = %f | rot = %f", wallPosition.angular.z*180/3.14159, guidanceLocalPose.angular.z*180/3.14159, rot * 180/3.14159 );
+      // ROS_INFO("wall = %f | global = %f | rot = %f", wallPosition.angular.z*180/3.14159, guidanceLocalPose.angular.z*180/3.14159, rot * 180/3.14159 );
 
-    wallPosition.linear.y = localPosition.x * sin( rot ) 
-                              + localPosition.y * cos( rot );
-      
+      wallPosition.linear.y = localPosition.x * sin( rot ) 
+                                + localPosition.y * cos( rot );
+        
     }
                         
   }

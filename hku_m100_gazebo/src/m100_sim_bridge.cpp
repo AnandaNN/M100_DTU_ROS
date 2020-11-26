@@ -144,7 +144,14 @@ void attitudeQuaternionCallback(const geometry_msgs::QuaternionStamped::ConstPtr
 
   // Counter the motion from the drones movement
 
-  gimbal_q.setEuler(gimbal_pitch - pitch, gimbal_roll - roll, 0);
+  // gimbal_q.setEuler(gimbal_pitch - pitch, gimbal_roll - roll, 0);
+
+  tf::Quaternion rpy;
+  rpy.setEuler( pitch, roll, 0 ); //-guidanceYawOffset );
+  tf::Matrix3x3 R_G2L(rpy);
+  tf::Matrix3x3 invRot = R_G2L.inverse();
+
+  invRot.getRotation(gimbal_q);
 
   target_gimbal_pose.orientation.w = gimbal_q.w();
   target_gimbal_pose.orientation.x = gimbal_q.x();
