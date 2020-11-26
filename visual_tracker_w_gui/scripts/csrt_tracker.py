@@ -6,9 +6,11 @@ import cv2 as cv2
 
 # ROS related imports
 import rospy
-from geometry_msgs.msg import Point, Twist
+from geometry_msgs.msg import Point, Twist, PointStamped
 from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge, CvBridgeError
+
+import tf
 
 # Define middle and focals
 C_MID = (640, 360)
@@ -22,8 +24,9 @@ class Target_tracker():
         cam_info = rospy.wait_for_message('/usb_cam/camera_info', CameraInfo)
         FOCAL_LENGTH[0] = cam_info.K[0]
         FOCAL_LENGTH[1] = cam_info.K[4]
-        print(FOCAL_LENGTH)
+        
         self.hoz_fov = np.arctan(C_MID[0] / FOCAL_LENGTH[0])
+        print(FOCAL_LENGTH, self.hoz_fov*180/np.pi)
 
         # For converting to openCV
         self.bridge = CvBridge()
@@ -32,8 +35,11 @@ class Target_tracker():
         self.target_pub = rospy.Publisher('/target', Twist, queue_size=1)
         self.distance_error_pub = rospy.Publisher('/distance_error', Point, queue_size=1)
 
+        # Test point publishers
+        self.wallp_pub = rospy.Publisher('/wallP', PointStamped, queue_size=1)
+
         # Subscriber
-        # self.image_sub = rospy.Subscriber("/camera/image_decompressed",Image,self.newFrameCallback)
+        #self.image_sub = rospy.Subscriber("/camera/image_decompressed",Image,self.newFrameCallback)
         self.image_sub = rospy.Subscriber("/usb_cam/image_raw",Image,self.newFrameCallback)
         self.gui_target_sub = rospy.Subscriber("/gui_target", Point, self.guiTragetCallback)
         self.distance_sub = rospy.Subscriber("/dtu_controller/current_frame_pose", Twist, self.positionCallback)
@@ -49,6 +55,10 @@ class Target_tracker():
         self.tracker = None
         self.initBB = None
         self.bbSize = (30,30)
+
+        # Broadcaster related
+        self.br = tf.TransformBroadcaster()
+        self.dronePos = None
 
         print('Target tracking initialised')
 
@@ -108,10 +118,15 @@ class Target_tracker():
             # self.distance_error.z = -(self.new_target[1] - C_MID[1])/FOCAL_LENGTH[1] * self.distance_to_wall
             # print("{} {}".format(self.new_target[0], self.new_target[1]))
             # print("{} {}".format(self.distance_error.y, self.distance_error.z))
-            theta = self.wall_angle - (self.hoz_fov) * float(self.new_target[0] - C_MID[0])/float(C_MID[0])
-
-            self.distance_error.y = self.distance_to_wall * np.sin(theta) # - self.distance_to_wall * np.sin(self.wall_angle)
-            self.distance_error.z = -(self.new_target[1] - C_MID[1])/FOCAL_LENGTH[1] * self.distance_to_wall
+            
+            #theta = self.wall_angle - (self.hoz_fov) * float(self.new_target[0] - C_MID[0])/float(C_MID[0])
+            #self.distance_error.y = self.distance_to_wall * np.sin(theta) # - self.distance_to_wall * np.sin(self.wall_angle)
+            
+            phi = np.arctan( float(self.new_target[0] - C_MID[0]) /  FOCAL_LENGTH[0] )
+            #print(phi*180/np.pi)
+            self.distance_error.y = -self.distance_to_wall * np.tan(phi - self.wall_angle)
+            
+            self.distance_error.z = -float(self.new_target[1] - C_MID[1])/FOCAL_LENGTH[1] * self.distance_to_wall
 
             #print(theta * 180.0/np.pi)
 
@@ -135,15 +150,72 @@ class Target_tracker():
 
     # Callback for reading the current distance to wall and yaw
     def positionCallback(self, data):
-        self.distance_to_wall = data.linear.x
+        #self.distance_to_wall = data.linear.x
         self.wall_angle = data.angular.z
+        self.dronePos = data
+
+    def updateTransformations(self):
+        
+        # 
+        q = tf.transformations.quaternion_from_euler(self.dronePos.angular.x, self.dronePos.angular.y, self.dronePos.angular.z)
+        Rrp = tf.transformations.quaternion_matrix( q )
+
+        # Camera position on drone
+        d = np.matrix( [[0.1], [0], [-0.04], [1]] )
+        
+        # Calculate camera distance in wall frame
+        Rrp[0:3, 3] = [self.dronePos.linear.x, 0, 0]
+        camWall = Rrp * d
+        self.distance_to_wall = camWall[0,0]
+
+        if self.distance_to_wall != None and self.new_target[0] != None:
+            x_err = self.distance_to_wall
+            phi = np.arctan( float(self.new_target[0] - C_MID[0]) /  FOCAL_LENGTH[0] )
+            y_err = -self.distance_to_wall * np.tan(phi - self.wall_angle)
+            
+            z_err = -float(self.new_target[1] - C_MID[1])/FOCAL_LENGTH[1] * self.distance_to_wall
+
+        # Broadcast the transform for rviz
+        q = tf.transformations.quaternion_from_euler(self.dronePos.angular.x, self.dronePos.angular.y, 0)
+        Rrp = tf.transformations.quaternion_matrix( q )
+        d_2_cam = np.linalg.pinv(Rrp)
+        q = tf.transformations.quaternion_from_matrix( d_2_cam )
+
+        self.br.sendTransform( (0.1, 0, -0.04), (q[0],q[1],q[2],q[3]), rospy.Time.now(), 'cameraLink', 'drone' )
+
+        p = PointStamped()
+        p.header.frame_id = 'cameraLink'
+        # p.point.x = -self.distance_to_wall/np.cos(self.wall_angle)
+        # p.point.y = 0
+
+        p.point.x = -self.distance_to_wall*np.cos(-self.wall_angle) + y_err*np.sin(-self.wall_angle)
+        p.point.y = -self.distance_to_wall*np.sin(-self.wall_angle) - y_err*np.cos(-self.wall_angle)
+
+        p.point.z = -z_err
+
+        q = tf.transformations.quaternion_from_euler(0, 0, -self.dronePos.angular.z)
+        self.br.sendTransform( (p.point.x, p.point.y, p.point.z), (q[0],q[1],q[2],q[3]), rospy.Time.now(), 'target', 'cameraLink' )
+
+        target_tf = tf.transformations.quaternion_matrix( q )
+        target_tf[0:3,3] = [p.point.x, p.point.y, p.point.z]
+        
+        d_2_cam[0:3,3] = [0.1, 0, -0.04]
+
+        dpos = np.linalg.pinv( np.matrix(d_2_cam) * np.matrix(target_tf) )
+
+        self.distance_error.x = dpos[0,3]
+        self.distance_error.y = dpos[1,3]
+        self.distance_error.z = dpos[2,3]
+
+        self.wallp_pub.publish(p)
 
     def run(self):
         while not rospy.is_shutdown():
 
             if self.new_target[0] != None:
+                self.updateTransformations()
                 self.updateTracker()
-                self.calculateError()
+                # self.calculateError()
                 self.publishTarget()
             else:
                 rospy.Rate(30).sleep()  
@@ -152,7 +224,5 @@ if __name__ == '__main__':
     rospy.init_node("target_node", anonymous=True)
     my_tracker = Target_tracker()
     my_tracker.run()
-
-
 
 

@@ -48,7 +48,10 @@ geometry_msgs::Pose target_yaw_pose;
 geometry_msgs::Pose target_pitch_pose;
 
 
+
 gazebo_msgs::ModelState target_model_state;
+// gazebo_msgs::ModelState target_gimbal_state;
+
 gazebo_msgs::LinkState target_gimbal_state;
 
 std::string model_name = "hku_m100";
@@ -57,11 +60,11 @@ std::string reference_frame = "world";
 // std::string car_reference_frame = "chassis";
 
 std::string gimbal_link_name = "camera_link";
-std::string gimbal_reference_frame = "base_link";
-std::string gimbal_virtual_link_name = "gimbal_link";
-std::string gimbal_roll_link_name = "roll_link";
-std::string gimbal_pitch_link_name = "pitch_link";
-std::string gimbal_yaw_link_name = "yaw_link";
+std::string gimbal_reference_frame = "drone"; // base_link
+// std::string gimbal_virtual_link_name = "gimbal_link";
+// std::string gimbal_roll_link_name = "roll_link";
+// std::string gimbal_pitch_link_name = "pitch_link";
+// std::string gimbal_yaw_link_name = "yaw_link";
 
 ros::Subscriber attitude_quaternion_subscriber;
 ros::Subscriber velocity_subscriber;
@@ -75,6 +78,7 @@ ros::ServiceClient get_model_state_client;
 
 gazebo_msgs::SetModelState set_model_state;
 gazebo_msgs::SetLinkState set_link_state;
+// gazebo_msgs::SetModelState set_link_state;
 
 bool velocity_updated = false;
 bool position_updated = false;
@@ -140,7 +144,14 @@ void attitudeQuaternionCallback(const geometry_msgs::QuaternionStamped::ConstPtr
 
   // Counter the motion from the drones movement
 
-  gimbal_q.setEuler(gimbal_pitch - pitch, gimbal_roll - roll, 0);
+  // gimbal_q.setEuler(gimbal_pitch - pitch, gimbal_roll - roll, 0);
+
+  tf::Quaternion rpy;
+  rpy.setEuler( pitch, roll, 0 ); //-guidanceYawOffset );
+  tf::Matrix3x3 R_G2L(rpy);
+  tf::Matrix3x3 invRot = R_G2L.inverse();
+
+  invRot.getRotation(gimbal_q);
 
   target_gimbal_pose.orientation.w = gimbal_q.w();
   target_gimbal_pose.orientation.x = gimbal_q.x();
@@ -175,9 +186,9 @@ void velocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr velocity_msg
 //void localPositionCallback(const dji_sdk::LocalPosition::ConstPtr& position_msg)
 void localPositionCallback(const geometry_msgs::PointStamped::ConstPtr& position_msg)
 {
-  target_pose.position.x = position_msg->point.y;
-  target_pose.position.y = -position_msg->point.x;
-  target_pose.position.z = position_msg->point.z + 0.115;
+  target_pose.position.x = position_msg->point.y * 0;
+  target_pose.position.y = -position_msg->point.x * 0;
+  target_pose.position.z = (position_msg->point.z + 0.115) * 0 + 5.5;
 
   position_updated = true;
   // std::cout << "local position callback get called" << std::endl;
@@ -289,13 +300,14 @@ int main(int argc, char **argv)
 
   model_state_client = n.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state", true);
   gimbal_state_client = n.serviceClient<gazebo_msgs::SetLinkState>("gazebo/set_link_state", true);
+  // gimbal_state_client = n.serviceClient<gazebo_msgs::SetModelState>("gazebo/set_model_state", true);
 
   // car_next_q = tf::Quaternion(0, 0, 0, 1);
   // car_ori_m = tf::Matrix3x3(car_next_q);
 
   ROS_INFO("Bridge between PC sim and gazebo connected");
 
-  ros::Rate spin_rate(200);
+  ros::Rate spin_rate(100);
 
   target_gimbal_pose.orientation.w = 1;
   target_gimbal_pose.orientation.x = 0;
@@ -330,9 +342,11 @@ int main(int argc, char **argv)
     if(gimbal_state_client)
     {
       target_gimbal_state.link_name = gimbal_link_name;
+      // target_gimbal_state.model_name = gimbal_link_name;
       target_gimbal_state.reference_frame = gimbal_reference_frame;
       target_gimbal_state.pose = target_gimbal_pose;
       target_gimbal_state.twist = target_gimbal_twist;
+      // set_link_state.request.model_state = target_gimbal_state;
       set_link_state.request.link_state = target_gimbal_state;
       gimbal_state_client.call(set_link_state);
 

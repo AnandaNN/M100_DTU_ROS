@@ -14,6 +14,7 @@
 #include "type_defines.h"
 
 #include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
 
 // Publisher
 ros::Publisher currentPosePub;
@@ -169,9 +170,19 @@ int main(int argc, char** argv)
     currentPose.angular.z = 0;
   }
 
+  visualOdometryPose.x = 0;
+  visualOdometryPose.y = 0;
+  visualOdometryPose.z = 0; 
+
   // Start the control loop timer
-  
+
+  currentPosePub.publish(currentPose); 
+
+  ROS_INFO("loopCallback starting");
+
   ros::Timer loopTimer = nh.createTimer(ros::Duration(1.0/loopFrequency), observerLoopCallback);
+
+  ROS_INFO("Observer start spinning");
 
   ros::spin();
 
@@ -187,7 +198,8 @@ void positioningCallback( const std_msgs::UInt8 msg )
 void readParameters( ros::NodeHandle nh )
 {
   // Read parameter file
-  nh.getParam("/dtu_controller/position_observer/loop_hz", loopFrequency);
+  if( !nh.getParam("/dtu_controller/position_observer/loop_hz", loopFrequency) ) loopFrequency = 60.0;
+  
   ROS_INFO("Observer frequency: %f", loopFrequency);
 
 }
@@ -233,6 +245,7 @@ void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion )
 
 void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPosition )
 {
+
   if( internalWallPosition.data[3] > 0.1 )
   {
     // ROS_INFO("WALL CALLBACK");
@@ -240,7 +253,8 @@ void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPositio
     float y = 0.001 * internalWallPosition.data[0];
     float x = -0.001 * internalWallPosition.data[1];
     float ang = tf2Radians(internalWallPosition.data[2]);
-    wallPosition.linear.x = -sqrt( x*x + y*y ) * cos(attitude.y);
+    //wallPosition.linear.x = -sqrt( x*x + y*y ) * cos(attitude.y);
+    wallPosition.linear.x = internalWallPosition.data[4];
     wallPosition.linear.y = 0;
     wallPosition.linear.z = 0;
 
@@ -251,24 +265,24 @@ void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPositio
     if( positioning == WALL_POSITION )
     {
 
-    float rot = wallPosition.angular.z - guidanceLocalPose.angular.z;
+      float rot = wallPosition.angular.z - guidanceLocalPose.angular.z;
 
-    // ROS_INFO("wall = %f | global = %f | rot = %f", wallPosition.angular.z*180/3.14159, guidanceLocalPose.angular.z*180/3.14159, rot * 180/3.14159 );
+      // ROS_INFO("wall = %f | global = %f | rot = %f", wallPosition.angular.z*180/3.14159, guidanceLocalPose.angular.z*180/3.14159, rot * 180/3.14159 );
 
-    wallPosition.linear.y = guidanceLocalPose.linear.x * sin( rot ) 
-                              + guidanceLocalPose.linear.y * cos( rot );
-      
+      wallPosition.linear.y = guidanceLocalPose.linear.x * sin( rot ) 
+                                + guidanceLocalPose.linear.y * cos( rot );
+        
     }
     else if( positioning == WALL_WITH_GPS_Y)
     {
 
-    float rot = wallPosition.angular.z - attitude.z;
+      float rot = wallPosition.angular.z - attitude.z;
 
-    // ROS_INFO("wall = %f | global = %f | rot = %f", wallPosition.angular.z*180/3.14159, guidanceLocalPose.angular.z*180/3.14159, rot * 180/3.14159 );
+      // ROS_INFO("wall = %f | global = %f | rot = %f", wallPosition.angular.z*180/3.14159, guidanceLocalPose.angular.z*180/3.14159, rot * 180/3.14159 );
 
-    wallPosition.linear.y = localPosition.x * sin( rot ) 
-                              + localPosition.y * cos( rot );
-      
+      wallPosition.linear.y = localPosition.x * sin( rot ) 
+                                + localPosition.y * cos( rot );
+        
     }
                         
   }
@@ -503,16 +517,17 @@ void observerLoopCallback( const ros::TimerEvent& )
     // currentPose.angular.z = truePose.angular.z;
     
 
-    static tf::TransformBroadcaster br;
-    tf::Transform transform;
-    transform.setOrigin( tf::Vector3(currentPose.linear.x, currentPose.linear.y, currentPose.linear.z) );
-    tf::Quaternion q;
-    q.setRPY( currentPose.angular.x, currentPose.angular.y, currentPose.angular.z );
-    transform.setRotation(q);
+    // static tf::TransformBroadcaster br;
+    // tf::Transform transform;
+    // transform.setOrigin( tf::Vector3(currentPose.linear.x, currentPose.linear.y, currentPose.linear.z) );
+    // tf::Quaternion q;
+    // q.setRPY( currentPose.angular.x, currentPose.angular.y, currentPose.angular.z );
+    // // transform.setRotation(q);
+    // transform.setRotation(currentQuaternion);
 
-    tf::StampedTransform cTF(transform, ros::Time::now(), "world", "drone");
+    // tf::StampedTransform cTF(transform, ros::Time::now(), "world", "drone");
 
-    br.sendTransform(cTF);
+    // br.sendTransform(cTF);
 
     currentPosePub.publish(currentPose); 
   }

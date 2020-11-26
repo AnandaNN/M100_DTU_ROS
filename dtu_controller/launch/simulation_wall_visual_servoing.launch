@@ -16,7 +16,7 @@
 
     <node pkg="visual_tracker_w_gui" type="csrt_tracker.py" name="csrt_tracker" output="screen" />
 
-    <include file="$(find LT_tracker_w_gui)/launch/gui.launch" />
+    <!-- <include file="$(find visual_tracker_w_gui)/launch/gui.launch" /> -->
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
@@ -35,7 +35,7 @@
         <!-- <include file="$(find dtu_controller)/launch/ransac_laser.launch" /> -->
 
 
-        <node pkg="dtu_controller" type="visual_tracking_test" name="visual_tracking_test" output="screen" />
+        <!-- <node pkg="dtu_controller" type="visual_tracking_test" name="visual_tracking_test" output="screen" /> -->
 
     </group>
 
