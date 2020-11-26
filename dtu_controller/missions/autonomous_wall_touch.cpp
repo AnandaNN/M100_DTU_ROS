@@ -135,6 +135,9 @@ int main(int argc, char** argv)
   ROS_INFO("Wall reached, preparing for contact!");
   ros::Duration(4).sleep();
 
+  //char input;
+  //std::cin >> input;
+
   bool approachStarted = false;
 
   ros::Time begin = ros::Time::now(); 

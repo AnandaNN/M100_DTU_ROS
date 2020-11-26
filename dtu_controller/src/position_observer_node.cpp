@@ -142,7 +142,7 @@ int main(int argc, char** argv)
   else if( positioning == GPS )
   {
     ROS_INFO("Using GPS positioning for start!");
-    if( gpsHealth > 3 ) {
+    if( gpsHealth >= 3 ) {
       currentPose.linear.x = localPosition.x;
       currentPose.linear.y = localPosition.y;
     }
@@ -404,7 +404,7 @@ void observerLoopCallback( const ros::TimerEvent& )
     else if( positioning == GPS )
     {
       
-      if( gpsHealth > 3 ) {
+      if( gpsHealth >= 3 ) {
         truePose.linear.x = localPosition.x;
         truePose.linear.y = localPosition.y;
       }
