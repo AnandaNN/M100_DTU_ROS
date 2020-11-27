@@ -5,7 +5,7 @@ import numpy as np
 from numpy import multiply, cos, sin, polyfit, array, append, poly1d
 from math import sqrt, atan, tan, degrees, radians
 from std_msgs.msg import Float32MultiArray
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from geometry_msgs.msg import PointStamped, Point32
 from geometry_msgs.msg import QuaternionStamped
 import pandas as pd
@@ -43,6 +43,8 @@ class WallEstimator():
         # Create the publisher
         self.wallPub = rospy.Publisher('wall_position', Float32MultiArray, queue_size=1)
         self.pointCloudDataPub = rospy.Publisher('pc_rotated_ransac_scan', PointCloud, queue_size=1)
+
+        self.posePub = rospy.Publisher('/laser_world_pose', PoseWithCovarianceStamped, queue_size=1)
 
         rospy.Timer( rospy.Duration(1.0/40.0), self.estimatePositionCallback )
         rospy.Timer( rospy.Duration(1.0/40.0), self.transformCalculator )
@@ -218,6 +220,22 @@ class WallEstimator():
         msg.data = [self.x, self.y, self.angle, self.valid, trueX]
         # Publish the data
         self.wallPub.publish(msg)
+
+        q = tf.transformations.quaternion_from_euler( 0, 0, -self.angle*np.pi/180 )
+
+        poseMsg = PoseWithCovarianceStamped()
+
+        poseMsg.header.stamp = rospy.Time.now()
+        poseMsg.header.frame_id = "target"
+
+        poseMsg.pose.pose.position.x = trueX
+        
+        poseMsg.pose.pose.orientation.x = q[0]
+        poseMsg.pose.pose.orientation.y = q[1]
+        poseMsg.pose.pose.orientation.z = q[3]
+        poseMsg.pose.pose.orientation.w = q[2]
+
+        self.posePub.publish(poseMsg)
 
 
     def run(self):

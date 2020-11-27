@@ -1,0 +1,53 @@
+<launch>
+
+    <!-- <node pkg="dji_sdk" type="correct_imu.py" name="dji_imu_correction" output="screen"/> -->
+
+    <node pkg="robot_localization" type="ekf_localization_node"
+        name="robot_localization_ekf_node"
+        clear_params="true">
+        <param name="frequency" value="30." />
+        <param name="sensor_timeout" value="0.2" />
+        <param name="two_d_mode" value="false" />
+        <param name="publish_tf" value="false" />
+        <param name="publish_acceleration" value="true" />
+        <param name="map_frame" value="map" />
+        <param name="odom_frame" value="odom" />
+        <param name="base_link_frame" value="body_FLU" />
+        <param name="world_frame" value="target" />
+
+        <!-- <remap from="odometry/filtered" to="odometry/filtered_twist" /> -->
+        
+        <param name="imu0" value="/dji_sdk/imu" />
+        
+        <param name="imu0_remove_gravitational_acceleration" value="true" />
+        
+        <param name="imu0_relative" value="false" />
+        <param name="imu0_differential" value="false" />
+
+        <rosparam param="imu0_config">
+            [false, false, false, true, true, false,
+            false, false, false, true, true, true,
+            true, true, true]
+        </rosparam>
+        
+        <param name="pose0" value="/laser_world_pose" />
+        <param name="pose0_relative" value="false" />
+        <param name="pose0_differential" value="false" />
+        <rosparam param="pose0_config">
+            [true, false, false, false, false, true,
+            false, false, false, false, false, false,
+            false, false, false]
+        </rosparam>
+
+        <param name="pose1" value="/camera_world_pose" />
+        <param name="pose1_relative" value="false" />
+        <param name="pose1_differential" value="false" />
+        <rosparam param="pose1_config">
+            [false, true, true, false, false, false,
+            false, false, false, false, false, false,
+            false, false, false]
+        </rosparam>
+
+    </node>
+
+</launch>

@@ -6,7 +6,7 @@ import cv2 as cv2
 
 # ROS related imports
 import rospy
-from geometry_msgs.msg import Point, Twist, PointStamped
+from geometry_msgs.msg import Point, Twist, PointStamped, PoseWithCovarianceStamped
 from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -34,6 +34,7 @@ class Target_tracker():
         # Publisher
         self.target_pub = rospy.Publisher('/target', Twist, queue_size=1)
         self.distance_error_pub = rospy.Publisher('/distance_error', Point, queue_size=1)
+        self.posePub = rospy.Publisher('/camera_world_pose', PoseWithCovarianceStamped, queue_size=1 )
 
         # Test point publishers
         self.wallp_pub = rospy.Publisher('/wallP', PointStamped, queue_size=1)
@@ -208,6 +209,17 @@ class Target_tracker():
         self.distance_error.z = dpos[2,3]
 
         self.wallp_pub.publish(p)
+
+        poseMsg = PoseWithCovarianceStamped()
+
+        poseMsg.header.stamp = rospy.Time.now()
+        poseMsg.header.frame_id = "target"
+
+        poseMsg.pose.pose.position.y = self.distance_error.y
+        poseMsg.pose.pose.position.z = self.distance_error.z
+
+        self.posePub.publish(poseMsg)
+
 
     def run(self):
         while not rospy.is_shutdown():
