@@ -161,7 +161,7 @@ class Target_tracker():
         Rrp = tf.transformations.quaternion_matrix( q )
 
         # Camera position on drone
-        d = np.matrix( [[0.1], [0], [-0.04], [1]] )
+        d = np.matrix( [[0.12], [-0.01], [-0.05], [1]] )
         
         # Calculate camera distance in wall frame
         Rrp[0:3, 3] = [self.dronePos.linear.x, 0, 0]
@@ -181,7 +181,7 @@ class Target_tracker():
         d_2_cam = np.linalg.pinv(Rrp)
         q = tf.transformations.quaternion_from_matrix( d_2_cam )
 
-        self.br.sendTransform( (0.1, 0, -0.04), (q[0],q[1],q[2],q[3]), rospy.Time.now(), 'cameraLink', 'drone' )
+        self.br.sendTransform( (0.12, -0.01, -0.05), (q[0],q[1],q[2],q[3]), rospy.Time.now(), 'cameraLink', 'drone' )
 
         p = PointStamped()
         p.header.frame_id = 'cameraLink'
@@ -199,7 +199,7 @@ class Target_tracker():
         target_tf = tf.transformations.quaternion_matrix( q )
         target_tf[0:3,3] = [p.point.x, p.point.y, p.point.z]
         
-        d_2_cam[0:3,3] = [0.1, 0, -0.04]
+        d_2_cam[0:3,3] = [0.12, -0.01, -0.05]
 
         dpos = np.linalg.pinv( np.matrix(d_2_cam) * np.matrix(target_tf) )
 

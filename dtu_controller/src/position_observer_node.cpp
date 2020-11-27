@@ -463,7 +463,7 @@ void observerLoopCallback( const ros::TimerEvent& )
       truePose.linear.z = ultraHeight;
     }
 
-    float maxError = 0.5;
+    float maxError = 1.5;
     bool valid = true;
     float weightYaw;
     float weight[3];
@@ -503,7 +503,8 @@ void observerLoopCallback( const ros::TimerEvent& )
       currentPose.linear.y = (currentPose.linear.y + motionVelocity.getY()*(1.0/loopFrequency) )*weight[1] + truePose.linear.y * (1 - weight[1]);
       currentPose.linear.z = (currentPose.linear.z + motionVelocity.getZ()*(1.0/loopFrequency) )*weight[2] + truePose.linear.z * (1 - weight[2]);
 
-      currentPose.angular.z = (currentPose.angular.z + gyroZ*(1.0/loopFrequency) )*weightYaw + truePose.angular.z * (1 - weightYaw);
+      // currentPose.angular.z = (currentPose.angular.z + gyroZ*(1.0/loopFrequency) )*weightYaw + truePose.angular.z * (1 - weightYaw);
+      currentPose.angular.z = (currentPose.angular.z)*weightYaw + truePose.angular.z * (1 - weightYaw);
     }
     else{
       currentPose.linear.x = truePose.linear.x;

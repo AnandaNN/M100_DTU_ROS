@@ -117,16 +117,18 @@ int main(int argc, char** argv)
 
   float xTarget = currentPosition.linear.x;
 
+  float zOffest = 0.05;
+
   ROS_INFO("Centering around the target! (3s)");
-  controllerInterface.set_reference(xTarget, 0, 0, 0);
+  controllerInterface.set_reference(xTarget, 0, zOffest, 0);
   ros::Duration(3).sleep();
 
   ROS_INFO("Starting the approach");
-  while( ros::ok()  && xTarget < -1.0)
+  while( ros::ok()  && xTarget < -1.2)
   {
 
     xTarget =currentPosition.linear.x + 0.25;
-    controllerInterface.set_reference(xTarget, 0, 0, 0);
+    controllerInterface.set_reference(xTarget, 0, zOffest, 0);
 
     ros::Duration(0.01).sleep();
     ros::spinOnce();
@@ -142,14 +144,14 @@ int main(int argc, char** argv)
 
   ros::Time begin = ros::Time::now(); 
 
-  xTarget = -1.0;
+  xTarget = -1.2;
 
   while( ros::ok() )
   {
     if( !contactController.checkRod() )
     {
       xTarget += 0.005;
-      controllerInterface.set_reference(xTarget, 0, 0, 0);
+      controllerInterface.set_reference(xTarget, 0, zOffest, 0);
     }
 
     if( contactController.checkRod() )
@@ -196,13 +198,13 @@ int main(int argc, char** argv)
   }
 
   xTarget = -2.0;
-  controllerInterface.set_reference(xTarget, 0, 0, 0);
+  controllerInterface.set_reference(xTarget, 0, zOffest, 0);
   controllerInterface.set_control_status( RUNNING );
 
   ros::Duration(5).sleep();
 
   xTarget = -3;
-  controllerInterface.set_reference(xTarget, 0, 0, 0);
+  controllerInterface.set_reference(xTarget, 0, zOffest, 0);
   ros::Duration(5).sleep();
 
   if( set_control_authority(nh, false) ) ROS_INFO("Released control authorithy");
