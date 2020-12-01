@@ -45,4 +45,6 @@
 
     </group>
 
+    <include file="$(finde dtu_controller)/launch/robot_localization.launch" />
+
 </launch>

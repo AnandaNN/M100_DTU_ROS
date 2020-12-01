@@ -108,7 +108,7 @@ int main(int argc, char** argv)
       controllerInterface.holdPosition( nh );
       ros::Duration(0.01).sleep();
       controllerInterface.set_control_status( RUNNING );
-      ros::Duration(3).sleep();
+      ros::Duration(4).sleep();
       break;
     }
     ros::Duration(0.01).sleep();
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
 
   ROS_INFO("Centering around the target! (3s)");
   controllerInterface.set_reference(xTarget, 0, zOffest, 0);
-  ros::Duration(3).sleep();
+  ros::Duration(5).sleep();
 
   ROS_INFO("Starting the approach");
   while( ros::ok()  && xTarget < -1.2)
