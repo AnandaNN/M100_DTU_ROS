@@ -45,6 +45,6 @@
 
     </group>
 
-    <include file="$(finde dtu_controller)/launch/robot_localization.launch" />
+    <include file="$(find dtu_controller)/launch/robot_localization.launch" />
 
 </launch>
