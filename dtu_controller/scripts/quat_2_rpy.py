@@ -12,9 +12,11 @@ from geometry_msgs.msg import Vector3
 from sensor_msgs.msg import Joy
 from guidance.msg import Motion
 
+from nav_msgs.msg import Odometry
+
 import numpy as np
 
-RAD2DEG = 180.0*np.pi 
+RAD2DEG = 180.0/np.pi 
 
 class QuatToEuler():
     def __init__(self):
@@ -25,6 +27,10 @@ class QuatToEuler():
         self.cmdSub = rospy.Subscriber("/dji_sdk/flight_control_setpoint_rollpitch_yawrate_zvelocity/", Joy, self.cmdCallback)
         self.motionSub = rospy.Subscriber("/guidance/motion", Motion, self.motionCallback)
         
+        self.odoSub = rospy.Subscriber("/odometry/filtered_map", Odometry, self.odoCallback)
+
+        self.odoPub = rospy.Publisher("/odoRPY", Vector3, queue_size=1)
+
         self.attitudePub = rospy.Publisher("attitudeRPY", Vector3, queue_size=1)
         self.guidanceRPYPub = rospy.Publisher("guidanceRPY", Vector3, queue_size=1)
         self.cmdPub = rospy.Publisher("cmdRP", Vector3, queue_size=1)
@@ -32,6 +38,14 @@ class QuatToEuler():
 
         # Main while loop.
         rospy.spin()
+
+    def odoCallback(self, msg):
+        (r, p, y) = tf.transformations.euler_from_quaternion([msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w])
+        outMsg = Vector3()
+        outMsg.x = r*RAD2DEG
+        outMsg.y = p*RAD2DEG
+        outMsg.z = y
+        self.odoPub.publish(outMsg)
 
     # Odometry callback function.
     def attitudeCallback(self, msg):

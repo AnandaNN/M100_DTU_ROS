@@ -216,12 +216,13 @@ class WallEstimator():
 
         # Convert it to the ros array
         msg = Float32MultiArray()
+        #msg.st
         #msg.data = [self.x, self.y, self.angle, self.valid, (np.linalg.inv( m2 ) * np.linalg.inv(m1) )[0,3]]
         msg.data = [self.x, self.y, self.angle, self.valid, trueX]
         # Publish the data
         self.wallPub.publish(msg)
 
-        q = tf.transformations.quaternion_from_euler( 0, 0, -self.angle*np.pi/180 )
+        q = tf.transformations.quaternion_from_euler( 0, 0, self.angle*np.pi/180 )
 
         poseMsg = PoseWithCovarianceStamped()
 
@@ -232,8 +233,18 @@ class WallEstimator():
         
         poseMsg.pose.pose.orientation.x = q[0]
         poseMsg.pose.pose.orientation.y = q[1]
-        poseMsg.pose.pose.orientation.z = q[3]
-        poseMsg.pose.pose.orientation.w = q[2]
+        poseMsg.pose.pose.orientation.z = q[2]
+        poseMsg.pose.pose.orientation.w = q[3]
+
+        poseMsg.pose.covariance = [2.0e-02, 0, 0, 0, 0, 0,
+                                   0, 0, 0, 0, 0, 0,
+                                   0, 0, 0, 0, 0, 0,
+                                   0, 0, 0, 0, 0, 0,
+                                   0, 0, 0, 0, 0, 0,
+                                   0, 0, 0, 0, 0, 0.5]
+
+        # x 1.4532e-05
+        # yaw 4.1436e-05
 
         self.posePub.publish(poseMsg)
 

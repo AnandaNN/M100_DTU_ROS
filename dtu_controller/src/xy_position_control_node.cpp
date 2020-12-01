@@ -15,6 +15,9 @@
 #include "type_defines.h"
 
 #include <dji_sdk/SDKControlAuthority.h>
+
+#include <tf/tf.h>
+
 ros::ServiceClient sdk_ctrl_authority_service;
 
 // Control publisher
@@ -59,8 +62,10 @@ int main(int argc, char** argv)
 
   // Subscriber
   ros::Subscriber controlStatusSub = nh.subscribe("control_status", 1, &checkControlStatusCallback );
-  ros::Subscriber poseSub = nh.subscribe("current_frame_pose", 1, &updatePoseCallback );
+  ros::Subscriber poseSub = nh.subscribe("/odometry/filtered_map", 1, &updatePoseCallback );
+  //ros::Subscriber poseSub = nh.subscribe("current_frame_pose", 1, &updatePoseCallback );
   ros::Subscriber referenceSub = nh.subscribe("current_frame_goal_reference", 1, &updateReferenceCallback );
+
 
   // Initialize the 4 control values
   controlValue.axes.push_back(0);
@@ -182,10 +187,19 @@ void controlCallback( const ros::TimerEvent& )
 
 }
 
-void updatePoseCallback( const geometry_msgs::Twist pose )
+//void updatePoseCallback( const geometry_msgs::Twist pose )
+void updatePoseCallback( const nav_msgs::Odometry pose )
 {
   // ROS_INFO("Pose udpated");
-  currentPose = pose;
+  currentPose.linear.x = pose.pose.pose.position.x;
+  currentPose.linear.y = pose.pose.pose.position.y;
+  currentPose.linear.z = pose.pose.pose.position.z;
+
+  tf::Quaternion currentQuaternion = tf::Quaternion(pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z, pose.pose.pose.orientation.w);
+  tf::Matrix3x3 R_FLU2ENU(currentQuaternion);
+  R_FLU2ENU.getRPY(currentPose.angular.x, currentPose.angular.y, currentPose.angular.z);
+
+  // ROS_INFO("%.2f, %.2f, %.2f, %.2f, %.2f, %.2f", currentPose.linear.x, currentPose.linear.y, currentPose.linear.z, currentPose.angular.x, currentPose.angular.y, currentPose.angular.z);
 }
 
 void updateReferenceCallback( const geometry_msgs::Twist reference )

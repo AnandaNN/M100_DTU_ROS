@@ -19,6 +19,8 @@
 #include <sensor_msgs/Joy.h>
 #include <geometry_msgs/Twist.h>
 
+#include <nav_msgs/Odometry.h>
+
 // #include <geometry_msgs/QuaternionStamped.h>
 // #include <geometry_msgs/Vector3Stamped.h>
 // #include <sensor_msgs/NavSatFix.h>
@@ -36,7 +38,8 @@ void readParameters( ros::NodeHandle nh );
 void controlCallback( const ros::TimerEvent& );
 void checkControlStatusCallback( const std_msgs::UInt8 value );
 void updateReferenceCallback( const geometry_msgs::Twist reference );
-void updatePoseCallback( const geometry_msgs::Twist pose );
+//void updatePoseCallback( const geometry_msgs::Twist pose );
+void updatePoseCallback( const nav_msgs::Odometry pose );
 
 void rampReferenceUpdate();
 
