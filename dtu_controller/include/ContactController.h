@@ -51,7 +51,7 @@ class ContactController {
     float _kdYaw = 0.2;
     float _kpPitch = 0.04;
     float _kiPitch = 0.02;
-    float _realTimeFactor = 0.35;
+    float _realTimeFactor = 1.0;
     float _integral = 0.0;
     float _pitchErrorDegrees = 0.0;
     float _kdPitch = 0;

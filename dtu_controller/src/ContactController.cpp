@@ -89,8 +89,8 @@ void ContactController::controlTimerCallback( const ros::TimerEvent& )
 
     _pitchErrorDegrees = target + _contactPitchDegrees - rad2deg * _contactAttitude.y;
 
-      if ( _pitchErrorDegrees > 7.0 and _integral < 0.0
-        or _pitchErrorDegrees < -7.0 and _integral > 0.0 )
+      if ( _pitchErrorDegrees > 12.0 and _integral < 0.0
+        or _pitchErrorDegrees < -12.0 and _integral > 0.0 )
         _integral = 0.0;
       else if ( _integral < -0.5 and _pitchErrorDegrees > 0.0
           or _integral > -0.5 and _integral < 0.5
