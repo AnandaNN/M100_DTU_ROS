@@ -186,9 +186,9 @@ void velocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr velocity_msg
 //void localPositionCallback(const dji_sdk::LocalPosition::ConstPtr& position_msg)
 void localPositionCallback(const geometry_msgs::PointStamped::ConstPtr& position_msg)
 {
-  target_pose.position.x = position_msg->point.y * 0;
-  target_pose.position.y = -position_msg->point.x * 0;
-  target_pose.position.z = (position_msg->point.z + 0.115) * 0 + 5.5;
+  target_pose.position.x = position_msg->point.y;
+  target_pose.position.y = -position_msg->point.x;
+  target_pose.position.z = position_msg->point.z + 0.115;
 
   position_updated = true;
   // std::cout << "local position callback get called" << std::endl;
