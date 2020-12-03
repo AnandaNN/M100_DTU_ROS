@@ -108,7 +108,7 @@ int main(int argc, char** argv)
       controllerInterface.holdPosition( nh );
       ros::Duration(0.01).sleep();
       controllerInterface.set_control_status( RUNNING );
-      ros::Duration(3).sleep();
+      ros::Duration(4).sleep();
       break;
     }
     ros::Duration(0.01).sleep();
@@ -117,9 +117,21 @@ int main(int argc, char** argv)
 
   float xTarget = currentPosition.linear.x;
 
-  ROS_INFO("Centering around the target! (3s)");
+  ROS_INFO("Centering around the target! (10s)");
   controllerInterface.set_reference(xTarget, 0, 0, 0);
-  ros::Duration(3).sleep();
+  ros::Duration(7).sleep();
+
+  // ROS_INFO("Going 0.5 up! (10s)");
+  // controllerInterface.set_reference(-2.6, 0, 0.4, 0);
+  // ros::Duration(12).sleep();
+
+  // ROS_INFO("Going 0.5 down! (10s)");
+  // controllerInterface.set_reference(-2.6, 0, -0.1, 0);
+  // ros::Duration(12).sleep();
+
+  // ROS_INFO("Going 0.0! (10s)");
+  // controllerInterface.set_reference(-2.6, 0, 0, 0);
+  // ros::Duration(12).sleep();
 
   ROS_INFO("Starting the approach");
   while( ros::ok()  && xTarget < -1.0)
@@ -133,7 +145,7 @@ int main(int argc, char** argv)
   }
 
   ROS_INFO("Wall reached, preparing for contact!");
-  ros::Duration(4).sleep();
+  ros::Duration(6).sleep();
 
   //char input;
   //std::cin >> input;

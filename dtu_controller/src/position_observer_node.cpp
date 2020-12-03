@@ -449,7 +449,7 @@ void observerLoopCallback( const ros::TimerEvent& )
       truePose.linear.z = ultraHeight;
     }
 
-    float maxError = 0.5;
+    float maxError = 1.2;
     bool valid = true;
     float weightYaw;
     float weight[3];

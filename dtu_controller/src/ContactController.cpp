@@ -111,6 +111,8 @@ void ContactController::controlTimerCallback( const ros::TimerEvent& )
 
   }
 
+  _controlValue.header.stamp = ros::Time::now();
+
   if( _running ) _ctrlAttitudePub.publish( _controlValue );
 }
 
