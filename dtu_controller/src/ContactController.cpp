@@ -81,22 +81,33 @@ void ContactController::setControllerGains( float kpPitch, float kdPitch, float 
 
 void ContactController::controlTimerCallback( const ros::TimerEvent& )
 {
+  float target = _targetPitchDegrees;
 
   if( _rodValue )
   {
-    float target = _targetPitchDegrees;
     if( _disengage ) target = 0.0;
 
-    _controlValue.axes[1] = _attitude.y;
-    _controlValue.axes[3] = _yawRate;
-    _controlValue.axes[0] = _kpYaw * (_lastContactAttitude.z - _contactAttitude.z) - _kdYaw * _contactYawRate;
-    _controlValue.axes[2] = _kpPitch * (target + _contactPitchDegrees - rad2deg * _contactAttitude.y);
+    _pitchErrorDegrees = target + _contactPitchDegrees - rad2deg * _contactAttitude.y;
+
+      if ( _pitchErrorDegrees > 12.0 and _integral < 0.0
+        or _pitchErrorDegrees < -12.0 and _integral > 0.0 )
+        _integral = 0.0;
+      else if ( _integral < -0.5 and _pitchErrorDegrees > 0.0
+          or _integral > -0.5 and _integral < 0.5
+          or _integral > 0.5 and _pitchErrorDegrees < 0.0)
+        _integral += _realTimeFactor * _kiPitch * _pitchErrorDegrees * _loopPeriod;
+
+      _controlValue.axes[1] = _attitude.y;
+      _controlValue.axes[3] = _yawRate;
+      _controlValue.axes[0] = _kpYaw * (_lastContactAttitude.z - _contactAttitude.z) - _kdYaw * _contactYawRate;
+      _controlValue.axes[2] = _kpPitch * _pitchErrorDegrees + _integral;
 
     _contactBuffer = 0;
     // ROS_INFO("Contact running");
   }
   else
   {
+    _integral = 0.0;
     _lastContactAttitude = _contactAttitude;
     _contactBuffer++;
 
@@ -108,11 +119,17 @@ void ContactController::controlTimerCallback( const ros::TimerEvent& )
     _controlValue.axes[0] = 0;
     _controlValue.axes[2] = 0;
     _controlValue.axes[3] = 0;
-
   }
 
-  _controlValue.header.stamp = ros::Time::now();
-
-  if( _running ) _ctrlAttitudePub.publish( _controlValue );
+  if( _running )
+  {
+    _controlValue.header.stamp = ros::Time::now();
+    _ctrlAttitudePub.publish( _controlValue );
+    geometry_msgs::Vector3 stateMsg;
+    stateMsg.x = _integral;
+    stateMsg.y = target + _contactPitchDegrees;
+    stateMsg.z = _contactAttitude.y * rad2deg;
+    _statePub.publish(stateMsg);
+  }
 }
 

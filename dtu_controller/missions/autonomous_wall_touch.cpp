@@ -207,6 +207,13 @@ int main(int argc, char** argv)
 
   }
 
+  for(int i = 0; i < 50; i++) 
+  {
+    ros::spinOnce();
+    ros::Duration(0.01).sleep();
+  }
+  contactController.stopController();
+
   xTarget = -2.0;
   controllerInterface.set_reference(xTarget, 0, 0, 0);
   controllerInterface.set_control_status( RUNNING );

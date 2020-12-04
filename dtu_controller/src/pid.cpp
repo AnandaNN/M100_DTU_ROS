@@ -85,12 +85,12 @@ double PIDImpl::calculate( double setpoint, double pv )
     double Iout = _Ki * _integral * kif;
     if( Iout > _intLimit ){
         _integral = _intLimit/(_Ki*kif);
-        std::cout << "LIMIT+" << std::endl;
+        // std::cout << "LIMIT+" << std::endl;
     }
     else if( Iout < -_intLimit ) 
     {
         _integral = -_intLimit/(_Ki*kif);
-        std::cout << "LIMIT+" << std::endl;
+        // std::cout << "LIMIT+" << std::endl;
     }
  
     // Derivative term
