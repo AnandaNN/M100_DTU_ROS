@@ -50,6 +50,10 @@ class ContactController {
     float _kpYaw = 0.3;
     float _kdYaw = 0.2;
     float _kpPitch = 0.04;
+    float _kiPitch = 0.02;
+    float _realTimeFactor = 1.0;
+    float _integral = 0.0;
+    float _pitchErrorDegrees = 0.0;
     float _kdPitch = 0;
     float _targetPitchDegrees = 7.0;
     float _disengagePitch = -4.0;
@@ -60,6 +64,7 @@ class ContactController {
     bool _rodValue = false;
 
     float _loopFrequency = 50.0;
+    float _loopPeriod = 1.0/50.0;
 
     bool _running = false;
     bool _disengage = false;

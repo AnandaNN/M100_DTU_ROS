@@ -6,6 +6,6 @@
         <!-- <remap from="scan" to="/scan"/> -->
     </node>
 
-    <node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_wall_estimator" output="screen" />
+    <node pkg="dtu_controller" type="wallPositionEstimator.py" name="ransac_wall_estimator" output="screen" />
 
 </launch>

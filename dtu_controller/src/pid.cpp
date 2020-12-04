@@ -24,6 +24,7 @@ class PIDImpl
         double _Ki;
         double _pre_error;
         double _integral;
+        double _intLimit;
 };
 
 PID::PID( double dt, double max, double min, double Kp, double Kd, double Ki )
@@ -56,7 +57,8 @@ PIDImpl::PIDImpl( double dt, double max, double min, double Kp, double Kd, doubl
     _Kd(Kd),
     _Ki(Ki),
     _pre_error(0),
-    _integral(0)
+    _integral(0),
+    _intLimit(0.7)
 {
 }
 
@@ -75,10 +77,22 @@ double PIDImpl::calculate( double setpoint, double pv )
     // Proportional term
     double Pout = _Kp * error;
 
+    double kif = 1;
+    if( fabs(error) > 0.5 ) kif = 0.4;
+
     // Integral term
     _integral += error * _dt;
-    double Iout = _Ki * _integral;
-
+    double Iout = _Ki * _integral * kif;
+    if( Iout > _intLimit ){
+        _integral = _intLimit/(_Ki*kif);
+        // std::cout << "LIMIT+" << std::endl;
+    }
+    else if( Iout < -_intLimit ) 
+    {
+        _integral = -_intLimit/(_Ki*kif);
+        // std::cout << "LIMIT+" << std::endl;
+    }
+ 
     // Derivative term
     double derivative = (error - _pre_error) / _dt;
     double Dout = _Kd * derivative;
