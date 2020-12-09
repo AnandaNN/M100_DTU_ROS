@@ -124,7 +124,7 @@ int main(int argc, char** argv)
   ros::Duration(5).sleep();
 
   ROS_INFO("Starting the approach");
-  while( ros::ok()  && xTarget < -1.2)
+  while( ros::ok()  && xTarget < -1.1)
   {
 
     xTarget =currentPosition.linear.x + 0.25;
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
 
   ros::Time begin = ros::Time::now(); 
 
-  xTarget = -1.2;
+  xTarget = -1.1;
 
   while( ros::ok() )
   {
