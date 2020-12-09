@@ -201,6 +201,8 @@ class WallEstimator():
 
         self.br.sendTransform( (0, 0, 0), (fquats[0], fquats[1], fquats[2], fquats[3]), rospy.Time.now(), "flat_hokuyo", "hokuyo_link" )
 
+        self.br.sendTransform( (0.1, 0, 0.125), (0, 0, 0, 1), rospy.Time.now(), "hokuyo_link", "drone" )
+
         Rrp[0:3,3] = [0.1, 0, 0.125]
 
         m1 = np.matrix(  Rrp  )
