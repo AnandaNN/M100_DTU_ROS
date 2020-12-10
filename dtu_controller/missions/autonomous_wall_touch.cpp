@@ -197,11 +197,7 @@ int main(int argc, char** argv)
 
   }
 
-<<<<<<< HEAD
   for(int i = 0; i < 50; i++)
-=======
-  for(int i = 0; i < 50; i++) 
->>>>>>> best_demo
   {
     ros::spinOnce();
     ros::Duration(0.01).sleep();
