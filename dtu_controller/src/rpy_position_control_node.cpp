@@ -1,6 +1,6 @@
 /** @file rpy_position_control_node.cpp
- *  @version 3.3
- *  @date June, 2020
+ *  @version 1.0
+ *  @date December, 2020
  *
  *  @brief
  *  
@@ -9,16 +9,34 @@
  *
  */
 
-#include "rpy_position_control_node.h"
-#include "dji_sdk/dji_sdk.h"
+// ROS includes
+#include <ros/ros.h>
+#include <std_msgs/UInt8.h>
+#include <tf/tf.h>
+#include <sensor_msgs/Joy.h>
+#include <geometry_msgs/Twist.h>
+
 #include "pid.h"
 #include "PIDController.h"
 #include "type_defines.h"
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
+// ROS includes
+#include <ros/ros.h>
+#include <std_msgs/UInt8.h>
+#include <tf/tf.h>
+#include <sensor_msgs/Joy.h>
+#include <geometry_msgs/Twist.h>
 
-#include <dji_sdk/SDKControlAuthority.h>
+
+void readParameters( ros::NodeHandle nh );
+void controlCallback( const ros::TimerEvent& );
+void checkControlStatusCallback( const std_msgs::UInt8 value );
+void updateReferenceCallback( const geometry_msgs::Twist reference );
+void updatePoseCallback( const geometry_msgs::Twist pose );
+void rampReferenceUpdate();
+
 ros::ServiceClient sdk_ctrl_authority_service;
 
 // Control publisher
@@ -47,8 +65,6 @@ PID *yawRatePid;
 PIDController rollPIDMatlab = PIDController(0.0167);
 PIDController pitchPIDMatlab = PIDController(0.0167);
 
-bool obtain_control();
-
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "rpy_position_control_node");
@@ -57,8 +73,6 @@ int main(int argc, char** argv)
   // ros::Duration(3).sleep();
 
   readParameters( nh );
-
-  sdk_ctrl_authority_service = nh.serviceClient<dji_sdk::SDKControlAuthority> ("/dji_sdk/sdk_control_authority");
 
   // Publisher for control values
   controlValuePub = nh.advertise<sensor_msgs::Joy>("/dji_sdk/flight_control_setpoint_rollpitch_yawrate_zvelocity", 1);
@@ -322,19 +336,4 @@ void checkControlStatusCallback( const std_msgs::UInt8 value )
   {
     controlStatus = value.data;
   }
-}
-
-bool obtain_control()
-{
-  dji_sdk::SDKControlAuthority authority;
-  authority.request.control_enable=1;
-  sdk_ctrl_authority_service.call(authority);
-
-  if(!authority.response.result)
-  {
-    ROS_INFO("obtain control failed!");
-    return false;
-  }
-
-  return true;
 }

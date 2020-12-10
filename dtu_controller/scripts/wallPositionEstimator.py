@@ -17,7 +17,8 @@ import math
 import tf
 
 # The highest angle of the wall which is accepted
-max_angle = 45
+# Angles higher than this will make it unlikely that the camera can see what is going on
+MAX_ANGLE = 45
 
 class WallEstimator():
     
@@ -37,18 +38,16 @@ class WallEstimator():
         self.br = tf.TransformBroadcaster()
 
         # Subscribers
-        self.scanSub = rospy.Subscriber('scan', LaserScan, self.laserSubCallback)
+        self.scanSub = rospy.Subscriber('/scan', LaserScan, self.laserSubCallback)
         self.attiSub = rospy.Subscriber('/dji_sdk/attitude', QuaternionStamped, self.attitudeCallback)
 
         # Create the publisher
-        self.wallPub = rospy.Publisher('wall_position', Float32MultiArray, queue_size=1)
-        self.pointCloudDataPub = rospy.Publisher('pc_rotated_ransac_scan', PointCloud, queue_size=1)
-
-        self.posePub = rospy.Publisher('/laser_world_pose', PoseWithCovarianceStamped, queue_size=1)
+        self.wallPub = rospy.Publisher('/laser_wall/wall_position', Float32MultiArray, queue_size=1)
+        self.pointCloudDataPub = rospy.Publisher('/laser_wall/pc_rotated_ransac_scan', PointCloud, queue_size=1)
+        self.posePub = rospy.Publisher('/laser_wall/laser_world_pose', PoseWithCovarianceStamped, queue_size=1)
 
         rospy.Timer( rospy.Duration(1.0/40.0), self.estimatePositionCallback )
         rospy.Timer( rospy.Duration(1.0/40.0), self.transformCalculator )
-        #rospy.Timer( rospy.Duration(1.0/40.0), self.testCallback )
 
     # Laser scan data callback
     def laserSubCallback(self, data):
@@ -63,9 +62,6 @@ class WallEstimator():
         self.roll = attitude[0]
         self.pitch = attitude[1]
         self.yaw = attitude[2]
-
-    def testCallback(self, timmm):
-        print("im testing time" + str(rospy.Time.now().secs) )
 
     # Calculates the estimated position
     def estimatePositionCallback(self, timerData):
@@ -110,7 +106,7 @@ class WallEstimator():
 
             angle_wall = degrees(atan(model_robust.params[1][1] / model_robust.params[1][0]))
 
-            if abs(angle_wall) < max_angle and inliers_sub.sum() > 30:
+            if abs(angle_wall) < MAX_ANGLE and inliers_sub.sum() > 30:
                 n_inliers.append(inliers_sub.sum())
                 models.append(model_robust)
                 inliers_lists.append(attempts)

@@ -6,10 +6,11 @@ import cv2 as cv2
 
 # ROS related imports
 import rospy
-from geometry_msgs.msg import Point, Twist, PointStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import Point, Twist, PointStamped, PoseWithCovarianceStamped, QuaternionStamped
 from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge, CvBridgeError
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Float32MultiArray
 
 import tf
 
@@ -33,20 +34,20 @@ class Target_tracker():
         self.bridge = CvBridge()
 
         # Publisher
-        self.target_pub = rospy.Publisher('/target', Twist, queue_size=1)
-        self.distance_error_pub = rospy.Publisher('/distance_error', Point, queue_size=1)
-        self.posePub = rospy.Publisher('/camera_world_pose', PoseWithCovarianceStamped, queue_size=1 )
+        self.target_pub = rospy.Publisher('/visual_tracker/target', Twist, queue_size=1)
+        self.distance_error_pub = rospy.Publisher('/visual_tracker/distance_error', Point, queue_size=1)
+        self.posePub = rospy.Publisher('/visual_tracker/camera_world_pose', PoseWithCovarianceStamped, queue_size=1 )
 
         # Test point publishers
-        self.wallp_pub = rospy.Publisher('/wallP', PointStamped, queue_size=1)
+        self.wallp_pub = rospy.Publisher('/visual_tracker/wallP', PointStamped, queue_size=1)
 
         # Subscriber
         #self.image_sub = rospy.Subscriber("/camera/image_decompressed",Image,self.newFrameCallback)
         self.image_sub = rospy.Subscriber("/usb_cam/image_raw",Image,self.newFrameCallback)
-        self.gui_target_sub = rospy.Subscriber("/gui_target", Point, self.guiTragetCallback)
-        self.distance_sub = rospy.Subscriber("/dtu_controller/current_frame_pose", Twist, self.positionCallback)
+        self.gui_target_sub = rospy.Subscriber("/visual_tracker/gui_target", Point, self.guiTragetCallback)
 
-        self.poseSub = rospy.Subscriber("/odometry/filtered_map", Odometry, self.odometryCallback )
+        self.attiSub = rospy.Subscriber('/dji_sdk/attitude', QuaternionStamped, self.attitudeCallback)
+        self.wallEstimateSub = rospy.Subscriber("/laser_wall/wall_position", Float32MultiArray, self.wallEstimateCallback )
 
         # Class variables
         self.new_target = (None, None)
@@ -60,20 +61,23 @@ class Target_tracker():
         self.initBB = None
         self.bbSize = (30,30)
 
-        self.filtered_yaw = 0.0
-        self.filtered_x = 0.0
-
         # Broadcaster related
         self.br = tf.TransformBroadcaster()
         self.dronePos = None
 
         print('Target tracking initialised')
 
-    def odometryCallback(self, msg):
-        self.filtered_x = msg.pose.pose.position.x
-        q = msg.pose.pose.orientation
-        rpy = tf.transformations.euler_from_quaternion( [q.x, q.y, q.z, q.w ])
-        self.filtered_yaw = rpy[2]
+    def wallEstimateCallback(self, data):
+        if data.data[3]:
+            self.wall_angle = data.data[2]
+            self.dronePos.linear.x = data.data[4]
+            self.dronePos.angular.z = data.data[2]
+
+    def attitudeCallback(self, msg):
+        rpy = tf.transformations.euler_from_quaternion( [msg.quaternion.x, msg.quaternion.y, msg.quaternion.z, msg.quaternion.w ])
+        self.dronePos.angular.x = rpy[0]
+        self.dronePos.angular.y = rpy[1]
+
 
     # Callback for getting the image frame
     def newFrameCallback(self, data):
@@ -161,17 +165,10 @@ class Target_tracker():
             if self.distance_to_wall != None and self.no_change:
                 self.distance_error_pub.publish(self.distance_error)
 
-    # Callback for reading the current distance to wall and yaw
-    def positionCallback(self, data):
-        #self.distance_to_wall = data.linear.x
-        self.wall_angle = data.angular.z
-        self.dronePos = data
-
     def updateTransformations(self):
         
         # 
         q = tf.transformations.quaternion_from_euler(self.dronePos.angular.x, self.dronePos.angular.y, self.dronePos.angular.z)
-        #q = tf.transformations.quaternion_from_euler(self.dronePos.angular.x, self.dronePos.angular.y, self.filtered_yaw)
         Rrp = tf.transformations.quaternion_matrix( q )
 
         # Camera position on drone
@@ -179,7 +176,6 @@ class Target_tracker():
         
         # Calculate camera distance in wall frame
         Rrp[0:3, 3] = [self.dronePos.linear.x, 0, 0]
-        #Rrp[0:3, 3] = [self.filtered_x, 0, 0]
         camWall = Rrp * d
         self.distance_to_wall = camWall[0,0]
 
@@ -209,7 +205,6 @@ class Target_tracker():
         p.point.z = -z_err
 
         q = tf.transformations.quaternion_from_euler(0, 0, -self.dronePos.angular.z)
-        #q = tf.transformations.quaternion_from_euler(0, 0, -self.filtered_yaw)
         self.br.sendTransform( (p.point.x, p.point.y, p.point.z), (q[0],q[1],q[2],q[3]), rospy.Time.now(), 'target', 'cameraLink' )
 
         target_tf = tf.transformations.quaternion_matrix( q )

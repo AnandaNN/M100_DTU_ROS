@@ -36,18 +36,12 @@
 #define C_PI (double)3.141592653589793
 #define DEG2RAD(DEG) ((DEG) * ((C_PI) / (180.0)))
 
-/*!
- * @brief a bare bone state machine to track the stage of the mission
- */
-
-
 void controlCallback( const sensor_msgs::Joy joy_msg );
 void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion );
 void imuCallback( const sensor_msgs::Imu imuMsgs );
 void rodCallback(const std_msgs::Bool::ConstPtr& msg);
 
 void timerCallback( const ros::TimerEvent& );
-
 
 bool obtain_control();
 bool release_control();

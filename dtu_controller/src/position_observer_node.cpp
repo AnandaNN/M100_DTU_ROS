@@ -10,7 +10,7 @@
  */
 
 #include "position_observer_node.h"
-#include "dji_sdk/dji_sdk.h"
+//#include "dji_sdk/dji_sdk.h"
 #include "type_defines.h"
 
 #include <tf/transform_broadcaster.h>
@@ -108,10 +108,10 @@ int main(int argc, char** argv)
   guidanceMotionSub = nh.subscribe<guidance::Motion>("/guidance/motion", 1, guidanceMotionCallback);
 
   // Laser scanner subscriber
-  wallPositionSub = nh.subscribe<std_msgs::Float32MultiArray>("/dtu_controller/wall_position", 1, wallPositionCallback );
+  wallPositionSub = nh.subscribe<std_msgs::Float32MultiArray>("/laser_wall/wall_position", 1, wallPositionCallback );
 
   // Visual Tracker subscriber
-  visualOdometrySub = nh.subscribe<geometry_msgs::Point>("/distance_error", 1, visualOdometryCallback);
+  visualOdometrySub = nh.subscribe<geometry_msgs::Point>("/visual_tracker/distance_error", 1, visualOdometryCallback);
 
   // Positioning subscriber
   positioningSub = nh.subscribe<std_msgs::UInt8>("/dtu_controller/positioning", 1, positioningCallback);
@@ -124,12 +124,6 @@ int main(int argc, char** argv)
     // ROS_INFO("SPIN");
     ros::spinOnce();
   }
-
-  // if( positioning == GPS ) ROS_INFO("Using GPS positioning for start!");
-  // else if( positioning == GUIDANCE ) ROS_INFO("Using GUIDANCE for start!");
-  // else if( positioning == WALL_POSITION ) ROS_INFO("Using Wall positioning for start!");
-
-  // ROS_INFO("Position = %d (%d)", positioning, (WALL))
 
   if( positioning == GUIDANCE )
   {
@@ -515,21 +509,7 @@ void observerLoopCallback( const ros::TimerEvent& )
 
     currentPose.angular.x = truePose.angular.x;
     currentPose.angular.y = truePose.angular.y;
-    // currentPose.angular.z = truePose.angular.z;
     
-
-    // static tf::TransformBroadcaster br;
-    // tf::Transform transform;
-    // transform.setOrigin( tf::Vector3(currentPose.linear.x, currentPose.linear.y, currentPose.linear.z) );
-    // tf::Quaternion q;
-    // q.setRPY( currentPose.angular.x, currentPose.angular.y, currentPose.angular.z );
-    // // transform.setRotation(q);
-    // transform.setRotation(currentQuaternion);
-
-    // tf::StampedTransform cTF(transform, ros::Time::now(), "world", "drone");
-
-    // br.sendTransform(cTF);
-
     currentPosePub.publish(currentPose); 
   }
   

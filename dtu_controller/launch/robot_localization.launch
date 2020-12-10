@@ -82,7 +82,7 @@
             false, false, false]
         </rosparam>
 
-        <param name="pose1" value="/camera_world_pose" />
+        <param name="pose1" value="/visual_tracker/camera_world_pose" />
         <param name="pose1_queue_size" value="3"/>
         <param name="pose1_relative" value="false" />
         <param name="pose1_differential" value="false" />

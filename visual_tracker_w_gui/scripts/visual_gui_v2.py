@@ -12,7 +12,7 @@ import cv2
 from geometry_msgs.msg import Twist, Point
 from sensor_msgs.msg import Image as SensorImage
 from sensor_msgs.msg import BatteryState
-from std_msgs.msg import UInt8
+from std_msgs.msg import UInt8, Float32MultiArray
 from cv_bridge import CvBridge, CvBridgeError
 
 class DroneGUI:
@@ -87,17 +87,18 @@ class DroneGUI:
 
         # Subscribers
         self.battery_sub = rospy.Subscriber('/dji_sdk/battery_state', BatteryState, self.update_battery_label)
-        self.target_sub = rospy.Subscriber("/target", Twist, self.draw_target)
-        self.distance_error_sub = rospy.Subscriber("/distance_error", Point, self.update_distance_error)
-        self.distance_sub = rospy.Subscriber('/dtu_controller/current_frame_pose', Twist, self.update_distance_label)
+        self.target_sub = rospy.Subscriber("/visual_tracker/target", Twist, self.draw_target)
+        self.distance_error_sub = rospy.Subscriber("/visual_tracker/distance_error", Point, self.update_distance_error)
         self.image_sub = rospy.Subscriber('/camera/image_decompressed', SensorImage, self.image_subscriber_callback)
 
-        # Publishers
-        self.gui_target_pub = rospy.Publisher('/gui_target', Point , queue_size=1)
-        self.frame_pub = rospy.Publisher('/frame_num', UInt8 , queue_size=1)
-        self.control_status_msg = rospy.Publisher('/target_tracking_msg', UInt8, queue_size= 1)
+        self.distance_sub = rospy.Subscriber('/laser_wall/wall_position', Float32MultiArray, self.update_distance_label)
 
-        rospy.init_node('gui', anonymous=False)
+        # Publishers
+        self.gui_target_pub = rospy.Publisher('/visual_tracker/gui_target', Point , queue_size=1)
+        self.frame_pub = rospy.Publisher('/visual_tracker/frame_num', UInt8 , queue_size=1)
+        self.control_status_msg = rospy.Publisher('/visual_tracker/target_tracking_msg', UInt8, queue_size= 1)
+
+        rospy.init_node('gui_v2', anonymous=False)
 
         rospy.Timer(rospy.Duration(1.0/30.0), self.control_status_publish_callback)
 
@@ -213,8 +214,8 @@ class DroneGUI:
         self.image_label.configure(cursor="") 
         
     def update_distance_label(self, data):
-        self.x_distance_label.configure( text = 'X Distance:\n{:02.2f} m'.format(data.linear.x) )
-        self.yaw_distance_label.configure( text = 'Yaw angle:\n{:02.2f} deg'.format(data.angular.z * 180.0/np.pi) )
+        self.x_distance_label.configure( text = 'X Distance:\n{:02.2f} m'.format(data.data.[4]) )
+        self.yaw_distance_label.configure( text = 'Yaw angle:\n{:02.2f} deg'.format(data.data[2] * 180.0/np.pi) )
 
     def update_distance_error(self, data):
         # self.x_distance_label.configure( text = 'X Distance:\n{:02.2f} m'.format(data.x))

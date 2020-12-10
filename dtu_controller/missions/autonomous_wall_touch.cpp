@@ -74,10 +74,10 @@ int main(int argc, char** argv)
   set_local_frame(nh);
   ros::Duration(1).sleep();
 
-  targetErrorSub = nh.subscribe<geometry_msgs::Point>("/distance_error", 1, &targetErrorCallback);
+  targetErrorSub = nh.subscribe<geometry_msgs::Point>("/visual_tracker/distance_error", 1, &targetErrorCallback);
   currentPoseSub = nh.subscribe<geometry_msgs::Twist>("current_frame_pose", 1, &currentPoseCallback);
 
-  targetMsgSub = nh.subscribe<std_msgs::UInt8>("/target_tracking_msg", 1, &targetMsgCallback);
+  targetMsgSub = nh.subscribe<std_msgs::UInt8>("/visual_Tracker/target_tracking_msg", 1, &targetMsgCallback);
 
   ROS_INFO("Ready to take over. Waiting for command");
   

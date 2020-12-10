@@ -1,7 +1,9 @@
 <launch>
 
     <arg name="simulation" default="false"/>
-    <arg name="positioning" default="5"/> <!-- Visual servoing -->
+    <arg name="positioning" default="5"/> <!-- 5 = Visual servoing -->
+
+    <arg name="use_robot_localization" default="true"/>
 
     <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
         <!-- node parameters -->
@@ -26,6 +28,7 @@
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
+            <param name="use_robot_localization" type="bool" value="$(arg use_robot_localization)" />
             <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" />
             <!-- <rosparam command="load" file="$(find dtu_controller)/parameters/simple_test.yaml" /> -->
         </node>

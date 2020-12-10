@@ -194,9 +194,7 @@ add_executable(rpy_position_control_node
 
 target_link_libraries(rpy_position_control_node
         ${catkin_LIBRARIES}
-        ${DJIOSDK_LIBRARIES}
         )
-add_dependencies(rpy_position_control_node dji_sdk_generate_messages_cpp)
 
 #######################
 
@@ -230,9 +228,7 @@ add_executable(xy_position_control_node
 
 target_link_libraries(xy_position_control_node
         ${catkin_LIBRARIES}
-        ${DJIOSDK_LIBRARIES}
         )
-add_dependencies(xy_position_control_node dji_sdk_generate_messages_cpp)
 
 #######################
 
@@ -242,9 +238,7 @@ add_executable(position_observer_node
 target_link_libraries(position_observer_node
         dtu_modules
         ${catkin_LIBRARIES}
-        ${DJIOSDK_LIBRARIES}
         )
-add_dependencies(position_observer_node dji_sdk_generate_messages_cpp)
 
 ########################################################################
 # Missions #

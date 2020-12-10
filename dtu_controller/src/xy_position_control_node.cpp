@@ -9,16 +9,26 @@
  *
  */
 
-#include "xy_position_control_node.h"
-#include "dji_sdk/dji_sdk.h"
+// #include "xy_position_control_node.h"
+
+// ROS includes
+#include <tf/tf.h>
+#include <ros/ros.h>
+#include <std_msgs/UInt8.h>
+#include <sensor_msgs/Joy.h>
+#include <geometry_msgs/Twist.h>
+#include <nav_msgs/Odometry.h>
+
 #include "pid.h"
 #include "type_defines.h"
 
-#include <dji_sdk/SDKControlAuthority.h>
-
-#include <tf/tf.h>
-
-ros::ServiceClient sdk_ctrl_authority_service;
+void readParameters( ros::NodeHandle nh );
+void controlCallback( const ros::TimerEvent& );
+void checkControlStatusCallback( const std_msgs::UInt8 value );
+void updateReferenceCallback( const geometry_msgs::Twist reference );
+void updatePoseCallback( const geometry_msgs::Twist pose );
+void robotLocalizationCallback( const nav_msgs::Odometry pose );
+void rampReferenceUpdate();
 
 // Control publisher
 ros::Publisher controlValuePub;
@@ -29,21 +39,19 @@ sensor_msgs::Joy controlValue;
 geometry_msgs::Twist currentPose;
 geometry_msgs::Twist currentReference;
 geometry_msgs::Twist goalReference;
-
 geometry_msgs::Twist referenceSteps;
 
 // Global random values
 uint8_t controlStatus = STOP_CONTROLLER;
 float loopFrequency;
 bool referenceUpdated = false;
+bool useRobotLocalization = false;
 
 // PID Controllers
 PID *xPid;
 PID *yPid;
 PID *zVelPid;
 PID *yawRatePid;
-
-bool obtain_control();
 
 int main(int argc, char** argv)
 {
@@ -53,8 +61,8 @@ int main(int argc, char** argv)
   // ros::Duration(3).sleep();
 
   readParameters( nh );
-
-  sdk_ctrl_authority_service = nh.serviceClient<dji_sdk::SDKControlAuthority> ("/dji_sdk/sdk_control_authority");
+  nh.param("/dtu_controller/xy_position_controller/use_robot_localization", useRobotLocalization, false);
+  if( useRobotLocalization ) ROS_INFO("Using Robot Localization for position control");
 
   // Publisher for control values
   controlValuePub = nh.advertise<sensor_msgs::Joy>("/dji_sdk/flight_control_setpoint_xy_yawrate_zvelocity", 1);
@@ -62,9 +70,10 @@ int main(int argc, char** argv)
 
   // Subscriber
   ros::Subscriber controlStatusSub = nh.subscribe("control_status", 1, &checkControlStatusCallback );
-  ros::Subscriber poseSub = nh.subscribe("/odometry/filtered_map", 1, &updatePoseCallback );
-  //ros::Subscriber poseSub = nh.subscribe("current_frame_pose", 1, &updatePoseCallback );
   ros::Subscriber referenceSub = nh.subscribe("current_frame_goal_reference", 1, &updateReferenceCallback );
+
+  if( useRobotLocalization ) ros::Subscriber robotLocalizationSub = nh.subscribe("/odometry/filtered_map", 1, &robotLocalizationCallback );
+  else ros::Subscriber poseSub = nh.subscribe("current_frame_pose", 1, &updatePoseCallback );
 
 
   // Initialize the 4 control values
@@ -100,12 +109,6 @@ int main(int argc, char** argv)
   referenceSteps.angular.x = 0;
   referenceSteps.angular.y = 0;
   referenceSteps.angular.z = 0;
-
-
-  // ros::Duration(2).sleep();
-
-  // if( obtain_control() ) ROS_INFO("Got control authorithy");
-  // else return 0;
 
   // Start the control loop timer
   
@@ -189,8 +192,7 @@ void controlCallback( const ros::TimerEvent& )
 
 }
 
-//void updatePoseCallback( const geometry_msgs::Twist pose )
-void updatePoseCallback( const nav_msgs::Odometry pose )
+void robotLocalizationCallback( const nav_msgs::Odometry pose )
 {
   // ROS_INFO("Pose udpated");
   currentPose.linear.x = pose.pose.pose.position.x;
@@ -200,9 +202,14 @@ void updatePoseCallback( const nav_msgs::Odometry pose )
   tf::Quaternion currentQuaternion = tf::Quaternion(pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z, pose.pose.pose.orientation.w);
   tf::Matrix3x3 R_FLU2ENU(currentQuaternion);
   R_FLU2ENU.getRPY(currentPose.angular.x, currentPose.angular.y, currentPose.angular.z);
-
-  // ROS_INFO("%.2f, %.2f, %.2f, %.2f, %.2f, %.2f", currentPose.linear.x, currentPose.linear.y, currentPose.linear.z, currentPose.angular.x, currentPose.angular.y, currentPose.angular.z);
 }
+
+void updatePoseCallback( const geometry_msgs::Twist pose )
+{
+  // ROS_INFO("Pose udpated");
+  currentPose = pose;
+}
+
 
 void updateReferenceCallback( const geometry_msgs::Twist reference )
 {
@@ -280,19 +287,4 @@ void checkControlStatusCallback( const std_msgs::UInt8 value )
   {
     controlStatus = value.data;
   }
-}
-
-bool obtain_control()
-{
-  dji_sdk::SDKControlAuthority authority;
-  authority.request.control_enable=1;
-  sdk_ctrl_authority_service.call(authority);
-
-  if(!authority.response.result)
-  {
-    ROS_INFO("obtain control failed!");
-    return false;
-  }
-
-  return true;
 }

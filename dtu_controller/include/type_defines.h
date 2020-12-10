@@ -9,11 +9,11 @@ enum CONTROL_STATUS_ENUM {
 
 enum GLOBAL_POSITIONING {
     NONE,
-    GPS,
-    GUIDANCE,
-    WALL_POSITION,
-    WALL_WITH_GPS_Y,
-    VISUAL_ODOMETRY,
+    GPS, // Pure GPS
+    GUIDANCE, // Pure Guidance Module
+    WALL_POSITION, // Laser RANSAC for X + yaw, Guidance for Y+Z
+    WALL_WITH_GPS_Y, // Laser RANSAC for X + yaw, GPS for Y+Z
+    VISUAL_ODOMETRY, // Laser RANSAC for X + yaw, Visual tracker for Y+Z
     LAST_VALID
 };
 

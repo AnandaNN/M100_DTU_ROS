@@ -22,39 +22,22 @@
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Float32MultiArray.h>
-
 #include <guidance/Motion.h>
-
 #include "GuidanceOdometry.h"
-// #include <geometry_msgs/QuaternionStamped.h>
-// #include <geometry_msgs/Vector3Stamped.h>
-// #include <sensor_msgs/NavSatFix.h>
 
 GuidanceOdometry odo;
-
-// DJI SDK includes
-// #include <dji_sdk/DroneTaskControl.h>
-// #include <dji_sdk/SDKControlAuthority.h>
-// #include <dji_sdk/DroneArmControl.h>
-// #include <dji_sdk/QueryDroneVersion.h>
-// #include <dji_sdk/SetLocalPosRef.h>
 
 void attitudeCallback( const geometry_msgs::QuaternionStamped quaternion );
 void localPositionCallback( const geometry_msgs::PointStamped localPoint );
 void ultraHeightCallback( const std_msgs::Float32 height );
 void gpsHealthCallback( const std_msgs::UInt8 health );
 void imuCallback( const sensor_msgs::Imu raw_imu );
-
 void wallPositionCallback( const std_msgs::Float32MultiArray internalWallPosition );
-
 void ultrasonicCallback( const sensor_msgs::LaserScan scan );
 void guidanceMotionCallback( const guidance::Motion motion );
-
 void visualOdometryCallback( const geometry_msgs::Point msg );
-
 void positioningCallback( const std_msgs::UInt8 msg );
-
 void observerLoopCallback( const ros::TimerEvent& );
 void readParameters( ros::NodeHandle nh );
 
-#endif // DEMO_FLIGHT_CONTROL_H
+#endif
