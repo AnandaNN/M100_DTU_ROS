@@ -170,6 +170,8 @@ void controlCallback( const ros::TimerEvent& )
     controlValue.axes[0] = cos(currentPose.angular.z) * xCmd + sin(currentPose.angular.z) * yCmd;
     controlValue.axes[1] = -sin(currentPose.angular.z) * xCmd + cos(currentPose.angular.z) * yCmd;
 
+    controlValue.header.stamp = ros::Time::now();
+
     controlValuePub.publish(controlValue);
 
   }
