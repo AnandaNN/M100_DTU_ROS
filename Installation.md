@@ -54,7 +54,7 @@ Tested and run with opencv 4.2.0 (should work with opencv > 3.3)
 
 `cd opencv`
 
-`mkdir build`
+`mkdir build && cd build`
 
 `cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D OPENCV_GENERATE_PKGCONFIG=ON -D OPENCV_ENABLE_NONFREE:BOOL=ON -D OPENCV_EXTRA_MODULES_PATH=~/Libraries/opencv_build/opencv_contrib/modules -D BUILD_EXAMPLES=ON ..`
 
@@ -76,7 +76,7 @@ Compile and install
 
 `cd Onboard-SDK`
 
-`mkdir build`
+`mkdir build && cd build`
 
 `cmake ..`
 
