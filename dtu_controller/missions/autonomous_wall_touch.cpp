@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 
   float xTarget = currentPosition.linear.x;
 
-  float zTarget = 0.05;
+  float zTarget = 0.045;
 
   ROS_INFO("Centering around the target! (3s)");
   controllerInterface.set_reference(xTarget, 0, zTarget, 0);

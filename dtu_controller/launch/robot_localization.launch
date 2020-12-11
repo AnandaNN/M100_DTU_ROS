@@ -70,7 +70,7 @@
             true, false, false]
         </rosparam>
 
-        <param name="pose0" value="/laser_world_pose" />
+        <param name="pose0" value="/laser_wall/laser_world_pose" />
 
         <param name="pose0_queue_size" value="3"/>
 
