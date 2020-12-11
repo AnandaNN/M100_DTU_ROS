@@ -3,7 +3,7 @@
     <arg name="simulation" default="false"/>
     <arg name="positioning" default="5"/> <!-- 5 = Visual servoing -->
 
-    <arg name="use_robot_localization" default="true"/>
+    <arg name="use_robot_localization" default="false"/>
 
     <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
         <!-- node parameters -->
@@ -16,43 +16,38 @@
         <param name="use_broadcast" type="bool" value="false"/>
     </node>
 
-    <!-- <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" /> -->
-
     <include file="$(find dtu_controller)/launch/arducam.launch" />
 
     <node pkg="visual_tracker_w_gui" type="csrt_tracker.py" name="csrt_tracker" output="screen" />
 
-    <!-- <include file="$(find visual_tracker_w_gui)/launch/gui.launch" /> -->
-
     <node pkg="rosserial_python" type="serial_node.py" name="rosserial_node" args="/dev/ttyACM0" output="screen" />
+
+    <!-- OLD NODE USE LAUNCH INSTEAD-->
+    <!-- <node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" /> -->
+    <include file="$(find dtu_controller)/launch/ransac_laser.launch" />
+    
+    <group if="$(arg use_robot_localization)">
+        <include file="$(find dtu_controller)/launch/robot_localization.launch" />
+    </group>
 
     <group ns="dtu_controller">
         <node pkg="dtu_controller" type="xy_position_control_node" name="xy_position_controller" output="screen">
             <param name="use_robot_localization" type="bool" value="$(arg use_robot_localization)" />
-            <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids.yaml" />
+            <rosparam command="load" file="$(find dtu_controller)/parameters/x_y_zvel_yawrate_pids_winter.yaml" />
             <!-- <rosparam command="load" file="$(find dtu_controller)/parameters/simple_test.yaml" /> -->
         </node>
 
-        <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
-    
-        <group if="$(eval arg('use_robot_localization') == false)">
+        <group if="$(eval arg('use_robot_localization') == 0 )">
             <node pkg="dtu_controller" type="position_observer_node" name="position_observer" output="screen">
                 <rosparam command="load" file="$(find dtu_controller)/parameters/observer_params.yaml" />
                 <param name="simulation" type="bool" value="$(arg simulation)"/>
                 <param name="positioning" type="int" value="$(arg positioning)"/>
             </node>
         </group>
-        <!-- OLD NODE USE LAUNCH INSTEAD-->
-        <!-- <node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" /> -->
-        <include file="$(find dtu_controller)/launch/ransac_laser.launch" />
-
 
         <node pkg="dtu_controller" type="autonomous_wall_touch" name="autonomous_wall_touch" output="screen" />
+    </group>
 
-    </group>
-    
-    <group if="$(eval arg('use_robot_localization') == true)">
-        <include file="$(find dtu_controller)/launch/robot_localization.launch" />
-    </group>
+
 
 </launch>
