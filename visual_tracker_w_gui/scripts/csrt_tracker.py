@@ -30,6 +30,8 @@ class Target_tracker():
         self.hoz_fov = np.arctan(C_MID[0] / FOCAL_LENGTH[0])
         print(FOCAL_LENGTH, self.hoz_fov*180/np.pi)
 
+        self.dronePos = Twist()
+
         # For converting to openCV
         self.bridge = CvBridge()
 
@@ -63,7 +65,6 @@ class Target_tracker():
 
         # Broadcaster related
         self.br = tf.TransformBroadcaster()
-        self.dronePos = None
 
         print('Target tracking initialised')
 

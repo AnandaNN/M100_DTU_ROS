@@ -33,12 +33,15 @@
             <!-- <rosparam command="load" file="$(find dtu_controller)/parameters/simple_test.yaml" /> -->
         </node>
 
-        <node pkg="dtu_controller" type="position_observer_node" name="position_observer" output="screen">
-            <rosparam command="load" file="$(find dtu_controller)/parameters/observer_params.yaml" />
-            <param name="simulation" type="bool" value="$(arg simulation)"/>
-            <param name="positioning" type="int" value="$(arg positioning)"/>
-        </node>
-
+        <node pkg="guidance" type="guidanceNode" name="guidance" output="screen" />
+    
+        <group if="$(eval arg('use_robot_localization') == false)">
+            <node pkg="dtu_controller" type="position_observer_node" name="position_observer" output="screen">
+                <rosparam command="load" file="$(find dtu_controller)/parameters/observer_params.yaml" />
+                <param name="simulation" type="bool" value="$(arg simulation)"/>
+                <param name="positioning" type="int" value="$(arg positioning)"/>
+            </node>
+        </group>
         <!-- OLD NODE USE LAUNCH INSTEAD-->
         <!-- <node pkg="dtu_controller" type="ransac_laser_w_subscriber.py" name="ransac_laser" output="screen" /> -->
         <include file="$(find dtu_controller)/launch/ransac_laser.launch" />
@@ -47,7 +50,9 @@
         <node pkg="dtu_controller" type="autonomous_wall_touch" name="autonomous_wall_touch" output="screen" />
 
     </group>
-
-    <include file="$(find dtu_controller)/launch/robot_localization.launch" />
+    
+    <group if="$(eval arg('use_robot_localization') == true)">
+        <include file="$(find dtu_controller)/launch/robot_localization.launch" />
+    </group>
 
 </launch>
