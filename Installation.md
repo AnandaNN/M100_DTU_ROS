@@ -76,7 +76,7 @@ Compile and install
 
 `cd Onboard-SDK`
 
-`mkdir build`
+`mkdir build && cd build`
 
 `cmake ..`
 
