@@ -6,7 +6,7 @@
 #include <geometry_msgs/Twist.h>
 
 // DJI Includes
-#include "dji_sdk/dji_sdk.h"
+#include <dji_sdk/dji_sdk.h>
 #include <dji_sdk/SDKControlAuthority.h>
 #include <dji_sdk/DroneArmControl.h>
 #include <dji_sdk/SetLocalPosRef.h>

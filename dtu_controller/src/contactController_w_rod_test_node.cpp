@@ -71,6 +71,21 @@ int main(int argc, char** argv)
         // contactController.stopController();
         contactController.disengage();
         ROS_INFO("Force stop. Disengaging wall control");
+        for( int i = 0; i < 50; i++ )
+        {
+          ros::spinOnce();
+          ros::Duration(0.01).sleep();
+        }
+        if( set_control_authority(nh, false) )
+        {
+          ROS_INFO("Control released");
+        }
+        else
+        {
+          ROS_INFO("Failed to get control");
+        }
+        contactRunning = false;
+        ros::Duration(5).sleep();
         // if( set_control_authority(nh, false) )
         // {
         //   ROS_INFO("Control released");

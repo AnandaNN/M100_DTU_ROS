@@ -287,6 +287,17 @@ target_link_libraries(autonomous_wall_touch
         ${DJIOSDK_LIBRARIES}
         )
 
+# Manual bridge mission
+add_executable(manual_bridge_flight
+        missions/manual_bridge_flight.cpp
+        src/general_functions.cpp)
+
+target_link_libraries(manual_bridge_flight
+        dtu_modules
+        ${catkin_LIBRARIES}
+        ${DJIOSDK_LIBRARIES}
+        )
+
 # Inspectdrone demo
 add_executable(inspectdrone_demo
         missions/inspectdrone_demo.cpp

@@ -12,18 +12,13 @@
 
 // Outside includes
 #include <ros/ros.h>
-#include "dji_sdk/dji_sdk.h"
-
 #include <std_msgs/Bool.h>
-
 #include <std_msgs/UInt8.h>
-
 #include <geometry_msgs/Point.h>
 
 // Own includes
 #include "type_defines.h"
 #include "general_functions.h"
-
 #include "ContactController.h"
 
 float zError = 0;
