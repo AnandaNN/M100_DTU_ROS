@@ -30,6 +30,8 @@ class Target_tracker():
         self.hoz_fov = np.arctan(C_MID[0] / FOCAL_LENGTH[0])
         print(FOCAL_LENGTH, self.hoz_fov*180/np.pi)
 
+        self.dronePos = Twist()
+
         # For converting to openCV
         self.bridge = CvBridge()
 
@@ -63,15 +65,14 @@ class Target_tracker():
 
         # Broadcaster related
         self.br = tf.TransformBroadcaster()
-        self.dronePos = None
 
         print('Target tracking initialised')
 
     def wallEstimateCallback(self, data):
         if data.data[3]:
-            self.wall_angle = data.data[2]
+            self.wall_angle = data.data[2] * np.pi/180
             self.dronePos.linear.x = data.data[4]
-            self.dronePos.angular.z = data.data[2]
+            self.dronePos.angular.z = data.data[2] * np.pi/180
 
     def attitudeCallback(self, msg):
         rpy = tf.transformations.euler_from_quaternion( [msg.quaternion.x, msg.quaternion.y, msg.quaternion.z, msg.quaternion.w ])
@@ -172,7 +173,7 @@ class Target_tracker():
         Rrp = tf.transformations.quaternion_matrix( q )
 
         # Camera position on drone
-        d = np.matrix( [[0.12], [-0.01], [-0.05], [1]] )
+        d = np.matrix( [[0.12], [-0.01], [-0.045], [1]] )
         
         # Calculate camera distance in wall frame
         Rrp[0:3, 3] = [self.dronePos.linear.x, 0, 0]
@@ -192,7 +193,7 @@ class Target_tracker():
         d_2_cam = np.linalg.pinv(Rrp)
         q = tf.transformations.quaternion_from_matrix( d_2_cam )
 
-        self.br.sendTransform( (0.12, -0.01, -0.05), (q[0],q[1],q[2],q[3]), rospy.Time.now(), 'cameraLink', 'drone' )
+        self.br.sendTransform( (0.12, -0.01, -0.045), (q[0],q[1],q[2],q[3]), rospy.Time.now(), 'cameraLink', 'drone' )
 
         p = PointStamped()
         p.header.frame_id = 'cameraLink'

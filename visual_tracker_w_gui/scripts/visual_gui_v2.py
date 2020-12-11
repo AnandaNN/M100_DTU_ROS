@@ -214,8 +214,8 @@ class DroneGUI:
         self.image_label.configure(cursor="") 
         
     def update_distance_label(self, data):
-        self.x_distance_label.configure( text = 'X Distance:\n{:02.2f} m'.format(data.data.[4]) )
-        self.yaw_distance_label.configure( text = 'Yaw angle:\n{:02.2f} deg'.format(data.data[2] * 180.0/np.pi) )
+        self.x_distance_label.configure( text = 'X Distance:\n{:02.2f} m'.format(data.data[4]) )
+        self.yaw_distance_label.configure( text = 'Yaw angle:\n{:02.2f} deg'.format(data.data[2]) )
 
     def update_distance_error(self, data):
         # self.x_distance_label.configure( text = 'X Distance:\n{:02.2f} m'.format(data.x))

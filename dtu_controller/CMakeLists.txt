@@ -230,6 +230,16 @@ target_link_libraries(xy_position_control_node
         ${catkin_LIBRARIES}
         )
 
+########################
+
+add_executable(robot_localization_rpy_position
+        src/robot_localization_rpy_position.cpp
+        )
+
+target_link_libraries(robot_localization_rpy_position
+        ${catkin_LIBRARIES}
+        )
+
 #######################
 
 add_executable(position_observer_node

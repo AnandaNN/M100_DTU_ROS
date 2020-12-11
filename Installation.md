@@ -36,6 +36,8 @@
 
 `sudo apt install ros-melodic-rosserial-arduino`
 
+`sudo apt install ros-melodic-robot-localization`
+
 `sudo apt install v4l-utils`
 
 ## Install OpenCV
