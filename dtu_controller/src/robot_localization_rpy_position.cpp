@@ -137,7 +137,7 @@ void controlCallback( const ros::TimerEvent& )
 
 void robotLocalizationCallback( const nav_msgs::Odometry odom )
 {
-  robotLocalizationOdom = pose;
+  robotLocalizationOdom = odom;
 }
 
 void updateReferenceCallback( const geometry_msgs::Twist reference )
