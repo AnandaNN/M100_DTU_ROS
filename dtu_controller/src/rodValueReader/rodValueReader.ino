@@ -15,19 +15,21 @@ std_msgs::Bool rodValue;
 ros::NodeHandle  nh;
 ros::Publisher rodPublisher("/dji/rod", &rodValue);
 
+#define PIN_NUMBER 2
+
 // Initialize
 void setup()
 {
   nh.initNode();
   nh.advertise(rodPublisher);
 
-  pinMode(1,INPUT_PULLUP);
+  pinMode(PIN_NUMBER,INPUT_PULLUP);
 }
 
 // arduino loop. Read value -> publish -> sleep -> repeat (30 Hz)
 void loop()
 {
-  int val = digitalRead(1);
+  int val = digitalRead(PIN_NUMBER);
   rodValue.data = !((bool) val);
   rodPublisher.publish( &rodValue );
   
