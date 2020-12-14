@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="joy" type="joy_node" name="joy_node" output="screen">
+    <param name="autorepeat_rate" value="50"/>
+  </node>
+  <node pkg="dtu_controller" type="velocity_control.py" name="velocity_control" output="screen"/>
+</launch>

@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="pi" value="3.1415926535897931" />
+  <xacro:property name="M_PI" value="3.1415926535897931" />
+
+  <xacro:include filename="$(find hku_m100_description)/urdf/primesense/primesense_camera.urdf.xacro"/>
+
+  <!-- Main quadrotor link -->
+  <xacro:macro name="hku_m100_base_macro">
+    <link name="drone"> <!-- base_link -->
+      <inertial>
+        <mass value="2.477" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.01152" ixy="0.0" ixz="0.0" iyy="0.01152" iyz="0.0" izz="0.0218" />
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://hku_m100_description/meshes/hku_m100/hku_m100.dae"/>
+        </geometry>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://hku_m100_description/meshes/hku_m100/hku_m100.stl"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <xacro:primesense_camera name="realsense" parent="drone" joint_type="fixed">
+      <origin xyz="-1 0 0.3" rpy="0 0 0"/>
+    </xacro:primesense_camera>
+  </xacro:macro>
+</robot>
+

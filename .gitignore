@@ -8,3 +8,4 @@ build.sh
 cmake-modules/build
 /Onboard-SDK-3.8.1-build
 /Onboard-SDK-3.8.1
+__pycache__
