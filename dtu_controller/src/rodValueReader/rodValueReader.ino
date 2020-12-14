@@ -21,13 +21,13 @@ void setup()
   nh.initNode();
   nh.advertise(rodPublisher);
 
-  pinMode(2,INPUT_PULLUP);
+  pinMode(1,INPUT_PULLUP);
 }
 
 // arduino loop. Read value -> publish -> sleep -> repeat (30 Hz)
 void loop()
 {
-  int val = digitalRead(2);
+  int val = digitalRead(1);
   rodValue.data = !((bool) val);
   rodPublisher.publish( &rodValue );
   
