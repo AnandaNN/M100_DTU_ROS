@@ -203,7 +203,7 @@ void controlCallback( const ros::TimerEvent& )
 
 void robotLocalizationCallback( const nav_msgs::Odometry pose )
 {
-  // ROS_INFO("Pose udpated");
+  //ROS_INFO("Pose udpated");
   currentPose.linear.x = pose.pose.pose.position.x;
   currentPose.linear.y = pose.pose.pose.position.y;
   currentPose.linear.z = pose.pose.pose.position.z;
