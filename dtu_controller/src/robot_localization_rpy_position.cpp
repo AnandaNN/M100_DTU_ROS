@@ -9,6 +9,9 @@
  *
  */
 
+// standard libraries
+#include <algorithm>
+
 // ROS includes
 #include <tf/tf.h>
 #include <ros/ros.h>
@@ -18,6 +21,8 @@
 #include <nav_msgs/Odometry.h>
 
 #include "pid.h"
+#include "tf/LinearMath/Matrix3x3.h"
+#include "tf/LinearMath/Vector3.h"
 #include "type_defines.h"
 
 void readParameters( ros::NodeHandle nh );
@@ -26,6 +31,10 @@ void checkControlStatusCallback( const std_msgs::UInt8 value );
 void updateReferenceCallback( const geometry_msgs::Twist reference );
 void robotLocalizationCallback( const nav_msgs::Odometry odom );
 void rampReferenceUpdate();
+
+// Constants
+const float deg2rad = M_PI/180.0;
+const float rad2deg = 180.0/M_PI;
 
 // Control publisher
 ros::Publisher controlValuePub;
@@ -107,19 +116,50 @@ void readParameters( ros::NodeHandle nh )
 
 }
 
+double clampSymmetric(double val, double  ext)
+{
+  return std::max(-ext, std::min(val, ext));
+}
+
 void controlCallback( const ros::TimerEvent& )
 {
+  tf::Quaternion qBF(
+      robotLocalizationOdom.pose.pose.orientation.x,
+      robotLocalizationOdom.pose.pose.orientation.y,
+      robotLocalizationOdom.pose.pose.orientation.z,
+      robotLocalizationOdom.pose.pose.orientation.w);
+  tf::Matrix3x3 RBF(qBF);
+  double rollBF, pitchBF, yawBF;
+  RBF.getRPY(rollBF, pitchBF, yawBF);
+  tf::Matrix3x3 RLF;
+  RLF.setRPY(0.0, 0.0, yawBF);
+  tf::Vector3 pBF(
+      robotLocalizationOdom.pose.pose.position.x,
+      robotLocalizationOdom.pose.pose.position.y,
+      robotLocalizationOdom.pose.pose.position.z);
+  tf::Vector3 pRF(
+      goalReference.linear.x,
+      goalReference.linear.y,
+      goalReference.linear.z);
+  tf::Vector3 pBRF = pRF - pBF;
+  tf::Vector3 pBRL = RLF.transpose() * pBRF;
+  tf::Vector3 vBFB(
+      robotLocalizationOdom.twist.twist.linear.x,
+      robotLocalizationOdom.twist.twist.linear.y,
+      robotLocalizationOdom.twist.twist.linear.z);
+  tf::Vector3 vBFL = RLF.transpose() * RBF * vBFB;
+  double yawRF = goalReference.angular.z;
 
   if( controlStatus == RUNNING)
   {
 
     rampReferenceUpdate();
 
-    controlValue.axes[2] = 0; // Yaw rate
-    controlValue.axes[3] = 0; // Z rate
+    controlValue.axes[2] = clampSymmetric(yawRF - yawBF, 1); // Yaw rate
+    controlValue.axes[3] = clampSymmetric(pBRL.z(), 1); // Z rate
 
-    controlValue.axes[0] = 0; // roll
-    controlValue.axes[1] = 0; // pitch
+    controlValue.axes[0] = clampSymmetric(-30.0 * deg2rad * pBRL.y() + 15.0 * deg2rad * vBFL.y(), 5.0 * deg2rad); // roll
+    controlValue.axes[1] = clampSymmetric(30.0 * deg2rad * pBRL.x() - 15.0 * deg2rad * vBFL.x(), 5.0 * deg2rad); // pitch
 
     controlValue.header.stamp = ros::Time::now();
     controlValuePub.publish(controlValue);
