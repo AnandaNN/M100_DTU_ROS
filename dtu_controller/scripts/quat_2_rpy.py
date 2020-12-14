@@ -28,7 +28,6 @@ class QuatToEuler():
         self.motionSub = rospy.Subscriber("/guidance/motion", Motion, self.motionCallback)
         
         self.odoSub = rospy.Subscriber("/odometry/filtered_map", Odometry, self.odoCallback)
-
         self.odoPub = rospy.Publisher("/odoRPY", Vector3, queue_size=1)
 
         self.attitudePub = rospy.Publisher("attitudeRPY", Vector3, queue_size=1)

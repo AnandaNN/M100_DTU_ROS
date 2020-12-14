@@ -28,6 +28,7 @@
     
     <group if="$(arg use_robot_localization)">
         <include file="$(find dtu_controller)/launch/robot_localization.launch" />
+        <node pkg="dtu_controller" type="odo_2_twist.py" name="odorepub" output="screen" />
     </group>
 
     <group ns="dtu_controller">
