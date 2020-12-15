@@ -111,7 +111,8 @@ int main(int argc, char** argv)
 void readParameters( ros::NodeHandle nh )
 {
   // Read parameter file
-  nh.getParam("/dtu_controller/xy_position_controller/loop_hz", loopFrequency);
+  if ( !nh.getParam("/dtu_controller/xy_position_controller/loop_hz", loopFrequency) )
+    loopFrequency = 50.0;
   ROS_INFO("Controller frequency: %f", loopFrequency);
 
 }
@@ -155,11 +156,10 @@ void controlCallback( const ros::TimerEvent& )
 
     rampReferenceUpdate();
 
-    controlValue.axes[2] = clampSymmetric(yawRF - yawBF, 1); // Yaw rate
-    controlValue.axes[3] = clampSymmetric(pBRL.z(), 1); // Z rate
-
     controlValue.axes[0] = clampSymmetric(-30.0 * deg2rad * pBRL.y() + 15.0 * deg2rad * vBFL.y(), 5.0 * deg2rad); // roll
     controlValue.axes[1] = clampSymmetric(30.0 * deg2rad * pBRL.x() - 15.0 * deg2rad * vBFL.x(), 5.0 * deg2rad); // pitch
+    controlValue.axes[2] = clampSymmetric(pBRL.z(), 1); // Z rate
+    controlValue.axes[3] = clampSymmetric(yawRF - yawBF, 1); // Yaw rate
 
     controlValue.header.stamp = ros::Time::now();
     controlValuePub.publish(controlValue);
