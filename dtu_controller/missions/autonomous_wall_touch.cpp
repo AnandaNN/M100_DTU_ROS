@@ -109,8 +109,8 @@ int main(int argc, char** argv)
     ros::spinOnce();
   }
 
-  char inputx;
-  std::cin >> inputx;
+  // char inputx;
+  // std::cin >> inputx;
 
   float xTarget = currentPosition.linear.x;
 
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
   controllerInterface.set_reference(xTarget, 0, zTarget, 0);
   ros::Duration(5).sleep();
 
-  std::cin >> inputx;
+  // std::cin >> inputx;
 
   ROS_INFO("Starting the approach");
   while( ros::ok()  && xTarget < -1.1)

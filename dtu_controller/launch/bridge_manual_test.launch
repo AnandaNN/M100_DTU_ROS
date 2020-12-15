@@ -1,0 +1,27 @@
+<launch>
+
+    <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
+        <!-- node parameters -->
+        <param name="serial_name" type="string" value="/dev/ttyUSB0"/>
+        <param name="baud_rate" type="int" value="230400"/>
+        <param name="app_id" type="int" value="1082161"/>
+        <param name="app_version" type="int" value="1"/>
+        <param name="align_time" type="bool" value="false"/>
+        <param name="enc_key" type="string" value="aa7f4935a5c220dd2d7e1ca4f0fcc75d0b7e51b99aad7d44f74e7c468c639e8c"/>
+        <param name="use_broadcast" type="bool" value="false"/>
+    </node>
+
+    <include file="$(find dtu_controller)/launch/arducam.launch" />
+
+    <node pkg="visual_tracker_w_gui" type="csrt_tracker.py" name="csrt_tracker" output="screen" />
+
+    <include file="$(find dtu_controller)/launch/ransac_laser.launch" />
+
+    <include file="$(find dtu_controller)/launch/robot_localization.launch" />
+    <node pkg="dtu_controller" type="odo_2_twist.py" name="odorepub" output="screen" />
+
+    <node pkg="rosserial_python" type="serial_node.py" name="rosserial_node" args="/dev/ttyACM0" output="screen" />
+
+    <node pkg="dtu_controller" type="contactController_w_rod_test_node" name="contactTest" output="screen" />
+
+</launch>

@@ -33,8 +33,8 @@ bool contactRunning = false;
 void rcCallback( const sensor_msgs::Joy msg) 
 {
   // ROS_INFO("%f", msg.axes[1]);
-  // if( contactRunning ) 
-  stopContact = (msg.axes[1] < -0.2) ? 1 : 0;
+  if( contactRunning ) stopContact = (msg.axes[1] < -0.2) ? 1 : 0;
+  else stopContact = false;
 }
 
 int main(int argc, char** argv)
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
         // contactController.stopController();
         contactController.disengage();
         ROS_INFO("Force stop. Disengaging wall control");
-        for( int i = 0; i < 50; i++ )
+        for( int i = 0; i < 60; i++ )
         {
           ros::spinOnce();
           ros::Duration(0.01).sleep();
