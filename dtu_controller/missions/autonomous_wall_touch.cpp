@@ -109,6 +109,9 @@ int main(int argc, char** argv)
     ros::spinOnce();
   }
 
+  char inputx;
+  std::cin >> inputx;
+
   float xTarget = currentPosition.linear.x;
 
   float zTarget = 0.045;
@@ -116,6 +119,8 @@ int main(int argc, char** argv)
   ROS_INFO("Centering around the target! (3s)");
   controllerInterface.set_reference(xTarget, 0, zTarget, 0);
   ros::Duration(5).sleep();
+
+  std::cin >> inputx;
 
   ROS_INFO("Starting the approach");
   while( ros::ok()  && xTarget < -1.1)

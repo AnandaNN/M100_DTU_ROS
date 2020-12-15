@@ -156,10 +156,16 @@ void controlCallback( const ros::TimerEvent& )
 
     rampReferenceUpdate();
 
-    controlValue.axes[0] = clampSymmetric(-30.0 * deg2rad * pBRL.y() + 15.0 * deg2rad * vBFL.y(), 5.0 * deg2rad); // roll
-    controlValue.axes[1] = clampSymmetric(30.0 * deg2rad * pBRL.x() - 15.0 * deg2rad * vBFL.x(), 5.0 * deg2rad); // pitch
+    float kp = 3 * deg2rad;
+    float kd = 3 * deg2rad;
+
+    float kp_y = 0.6;
+    float kd_y = 0.3;
+
+    controlValue.axes[0] = clampSymmetric(-kp * pBRL.y() + kd * vBFL.y(), 10.0 * deg2rad); // roll
+    controlValue.axes[1] = clampSymmetric(kp * pBRL.x() - kd * vBFL.x(), 10.0 * deg2rad); // pitch
     controlValue.axes[2] = clampSymmetric(pBRL.z(), 1); // Z rate
-    controlValue.axes[3] = clampSymmetric(yawRF - yawBF, 1); // Yaw rate
+    controlValue.axes[3] = clampSymmetric( kp_y * (yawRF - yawBF) - vBFL.z() * kd_y, 1.57); // Yaw rate
 
     controlValue.header.stamp = ros::Time::now();
     controlValuePub.publish(controlValue);
